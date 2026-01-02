@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 03e276950422e2647beb7566a1d414b3
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 183602
+  packageName: UI Number Input
+  packageVersion: 1.0
+  assetPath: Assets/UI Number Input Assets/Scripts/NumberInput.cs
+  uploadId: 676218

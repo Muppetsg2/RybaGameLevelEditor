@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 917cd75401a2cbf4ab5ee1351f79e580
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 183602
+  packageName: UI Number Input
+  packageVersion: 1.0
+  assetPath: Assets/UI Number Input Assets/Scripts/MouseOverButton.cs
+  uploadId: 676218
