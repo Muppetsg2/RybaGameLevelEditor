@@ -76,7 +76,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 2163339761
-  m_fontColor: {r: 0.9433962, g: 0.9433962, b: 0.9433962, a: 0.5}
+  m_fontColor: {r: 0.87058824, g: 0.87058824, b: 0.87058824, a: 0.5019608}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -652,7 +652,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputField: {fileID: 8588273833635651203}
-  fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  canHaveEmptyValue: 1
+  font: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   fontSize: 20
   placeholderText: Input
   incrementButton: {fileID: 8408059210509666917}
@@ -663,7 +664,11 @@ MonoBehaviour:
   changeFactor: 1
   CharacterLimit: 5
   longClickInvokeRate: 0.1
+  onValueChanged:
+    m_PersistentCalls:
+      m_Calls: []
   value: 0
+  emptyValue: 0
 --- !u!114 &8588273833635651203
 MonoBehaviour:
   m_ObjectHideFlags: 0

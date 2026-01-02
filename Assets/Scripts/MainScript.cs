@@ -5,11 +5,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using SFB;
 
-// TODO:
-// Ustawiæ minimalne pomniejszenie
-// Kursor zmienia siê podczas przesuwania (w prawo-lewo i góra-dó³) (zrezygnowa³em)
-// Sprawdziæ displacer i id
-
 public enum Tool { Brush, Eraser, DisplacerEraser, DisplacerBrush };
 
 public class MainScript : MonoBehaviour
@@ -211,18 +206,6 @@ public class MainScript : MonoBehaviour
                     Move();
                 }
             }
-            /*else
-            {
-                if (IsMovingHorizontal)
-                {
-                    IsMovingHorizontal = false;
-                }
-
-                if (IsMovingVertical)
-                {
-                    IsMovingVertical = false;
-                }
-            }*/
 
             if (Input.GetMouseButtonDown(2) && !scrollMoveEnabledChanged)
             {
@@ -252,16 +235,6 @@ public class MainScript : MonoBehaviour
             {
                 IsScaling = false;
             }
-
-            /*if (IsMovingHorizontal)
-            {
-                IsMovingHorizontal = false;
-            }
-
-            if (IsMovingVertical)
-            {
-                IsMovingVertical = false;
-            }*/
         }
 
         if (Input.GetMouseButtonDown(1) && moves.Count != 0)
@@ -401,78 +374,14 @@ public class MainScript : MonoBehaviour
     Vector2 currentMove = Vector2.zero;
     [Header("Movement")]
     public float moveSensitivity = 1.0f;
-    /*bool isMovingHorizontal = false;
-    bool IsMovingHorizontal
-    {
-        get
-        {
-            return isMovingHorizontal;
-        }
-        set
-        {
-            if (isMovingHorizontal != value)
-            {
-                isMovingHorizontal = value;
-                if (isMovingHorizontal)
-                {
-                    MoveHorizontalCursor();
-                }
-                else
-                {
-                    if (isCursorInView)
-                    {
-                        ToolCursor();
-                    }
-                    else
-                    {
-                        DefaultCursor();
-                    }
-                }
-            }
-        }
-    }
-    bool isMovingVertical = false;
-    bool IsMovingVertical
-    {
-        get
-        {
-            return isMovingVertical;
-        }
-        set
-        {
-            if (isMovingVertical != value)
-            {
-                isMovingVertical = value;
-                if (isMovingVertical)
-                {
-                    MoveVerticalCursor();
-                }
-                else
-                {
-                    if (isCursorInView)
-                    {
-                        ToolCursor();
-                    }
-                    else
-                    {
-                        DefaultCursor();
-                    }
-                }
-            }
-        }
-    }*/
     void Move()
     {
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            /*IsMovingVertical = false;
-            IsMovingHorizontal = true;*/
             currentMove.x += moveSensitivity * Input.mouseScrollDelta.y;
         }
         else
         {
-            /*IsMovingHorizontal = false;
-            IsMovingVertical = true;*/
             currentMove.y -= moveSensitivity * Input.mouseScrollDelta.y;
         }
 
@@ -958,20 +867,6 @@ public class MainScript : MonoBehaviour
         if (isCursorInView)
         {
             Cursor.SetCursor(scaleCursor, new Vector2(32, 32), CursorMode.Auto);
-        }
-    }
-    void MoveVerticalCursor()
-    {
-        if (isCursorInView)
-        {
-            Cursor.SetCursor(moveVerticalyCursor, new Vector2(32,32), CursorMode.Auto);
-        }
-    }
-    void MoveHorizontalCursor()
-    {
-        if (isCursorInView)
-        {
-            Cursor.SetCursor(moveHorizontalyCursor, new Vector2(32,32), CursorMode.Auto);
         }
     }
 

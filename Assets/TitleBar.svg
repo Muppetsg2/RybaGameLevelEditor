@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   sodipodi:docname="TitleBar.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showguides="true"
+     inkscape:zoom="4"
+     inkscape:cx="169"
+     inkscape:cy="216.375"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <sodipodi:guide
+       position="58.580919,237.32665"
+       orientation="0,-1"
+       id="guide3"
+       inkscape:locked="false" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Warstwa 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#ff5555;stroke-width:0"
+       id="rect1"
+       width="37.041668"
+       height="5.2916665"
+       x="34.619633"
+       y="55.755825" />
+    <path
+       id="rect3"
+       style="fill:#ffffff;stroke-width:0"
+       d="M 38.512895 55.75577 L 34.619592 59.648556 L 34.619592 59.995304 L 34.619592 61.047437 L 71.661259 61.047437 L 71.661259 59.67336 L 58.58092 59.67336 L 54.66333 55.75577 L 38.512895 55.75577 z "
+       inkscape:export-filename="TitleBar.png"
+       inkscape:export-xdpi="1228.8"
+       inkscape:export-ydpi="1228.8" />
+  </g>
+</svg>

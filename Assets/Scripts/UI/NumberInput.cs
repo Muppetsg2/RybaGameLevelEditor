@@ -1,7 +1,8 @@
-using TMPro;
-using UnityEngine;
 using NaughtyAttributes;
 using System;
+using TMPro;
+using UnityEngine;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(TMP_InputField))]
 public class NumberInput : MonoBehaviour
@@ -11,10 +12,13 @@ public class NumberInput : MonoBehaviour
     private TMP_InputField inputField;
 
     [SerializeField]
-    private TMP_FontAsset fontAsset;
+    private bool canHaveEmptyValue = false;
 
     [SerializeField]
-    private int fontSize = 26;
+    private TMP_FontAsset font;
+
+    [SerializeField]
+    private uint fontSize = 26;
 
     [SerializeField]
     [TextArea]
@@ -30,19 +34,19 @@ public class NumberInput : MonoBehaviour
     [Header("Value")]
     [SerializeField]
     [Tooltip("Initial value of the number field on start")]
-    private float initialValue = 0;
+    private int initialValue = 0;
 
     [SerializeField]
     [Tooltip("Minimum value the number should be")]
-    private float minimumValue = 0;
+    private int minimumValue = 0;
 
     [SerializeField]
     [Tooltip("Maximum value the number should be")]
-    private float maximumValue = 100;
+    private int maximumValue = 100;
 
     [SerializeField]
     [Tooltip("Value which we increment and decrement our number with, everytime we click on the increment or decrement button")]
-    private float changeFactor = 1;
+    private int changeFactor = 1;
 
     [SerializeField]
     private int CharacterLimit = 5;
@@ -53,19 +57,33 @@ public class NumberInput : MonoBehaviour
     [Range(0.05f, 1.00f)]
     private float longClickInvokeRate = 0.1f;
 
+    [Header("Events")]
+    public UnityEvent<int, bool> onValueChanged;
+
     [Foldout("Info")]
     [ReadOnly]
     [SerializeField]
-    private float value;
+    private int value;
+
+    [Foldout("Info")]
+    [SerializeField]
+    [ReadOnly]
+    private bool emptyValue = false;
 
     void OnValidate()
     {
         if (inputField != null)
         {
-            if (inputField.textComponent != null) inputField.textComponent.fontSize = fontSize;
+            if (inputField.textComponent != null)
+            {
+                inputField.textComponent.font = font;
+                inputField.textComponent.fontSize = fontSize;
+            }
+
             if (inputField.placeholder != null)
             {
                 TMP_Text placeholder = (TMP_Text)inputField.placeholder;
+                placeholder.font = font;
                 placeholder.fontSize = fontSize;
                 placeholder.text = placeholderText;
             }
@@ -83,25 +101,40 @@ public class NumberInput : MonoBehaviour
         {
             inputField.onValueChanged.AddListener(newValue =>
             {
-                if (newValue != null && newValue != string.Empty)
+                emptyValue = newValue == null || newValue == string.Empty;
+
+                if (!emptyValue)
                 {
-                    value = float.Parse(newValue);
+                    value = int.Parse(newValue);
+                    ClampNumberAndSetInputField();
+                }
+                else if (emptyValue && !canHaveEmptyValue)
+                {
+                    emptyValue = false;
+                    value = minimumValue;
+                    ClampNumberAndSetInputField();
                 }
                 else
                 {
                     value = minimumValue;
                 }
 
-                ClampNumberAndSetInputField();
+                onValueChanged?.Invoke(value, emptyValue);
             });
 
             inputField.characterLimit = CharacterLimit;
 
-            inputField.fontAsset = fontAsset;
-            if (inputField.textComponent != null) inputField.textComponent.fontSize = fontSize;
+            inputField.fontAsset = font;
+            if (inputField.textComponent != null)
+            {
+                inputField.textComponent.font = font;
+                inputField.textComponent.fontSize = fontSize;
+            }
+
             if (inputField.placeholder != null)
             {
                 TMP_Text placeholder = (TMP_Text)inputField.placeholder;
+                placeholder.font = font;
                 placeholder.fontSize = fontSize;
                 placeholder.text = placeholderText;
             }
@@ -111,13 +144,18 @@ public class NumberInput : MonoBehaviour
             Debug.LogWarning($"InputField not set in {gameObject.name}.NumberInput");
         }
 
+        emptyValue = false;
         value = initialValue;
         ClampNumberAndSetInputField();
 
         if (incrementButton != null)
         {
             incrementButton.longClickInvokeRate = longClickInvokeRate;
-            incrementButton.button.onClick.AddListener(Increment);
+            incrementButton.button.onClick.AddListener(() => 
+            {
+                Increment();
+                onValueChanged?.Invoke(value, emptyValue);
+            });
             incrementButton.longClickAction = Increment;
         }
         else
@@ -128,7 +166,11 @@ public class NumberInput : MonoBehaviour
         if (decrementButton != null)
         {
             decrementButton.longClickInvokeRate = longClickInvokeRate;
-            decrementButton.button.onClick.AddListener(Decrement);
+            decrementButton.button.onClick.AddListener(() =>
+            {
+                Decrement();
+                onValueChanged?.Invoke(value, emptyValue);
+            });
             decrementButton.longClickAction = Decrement;
         }
         else
@@ -137,14 +179,46 @@ public class NumberInput : MonoBehaviour
         }
     }
 
+    public bool HasValue()
+    {
+        return !emptyValue;
+    }
+
+    public int GetValue()
+    {
+        return emptyValue ? minimumValue : value;
+    }
+
+    public void SetInitialValue(int newInitialValue)
+    {
+        initialValue = newInitialValue;
+    }
+
+    public void SetValue(int newValue)
+    {
+        emptyValue = false;
+        value = newValue;
+        ClampNumberAndSetInputField();
+    }
+
     private void Increment()
     {
+        if (emptyValue)
+        {
+            emptyValue = false;
+            value = minimumValue;
+        }
         value += changeFactor;
         ClampNumberAndSetInputField();
     }
 
     private void Decrement()
     {
+        if (emptyValue)
+        {
+            emptyValue = false;
+            value = maximumValue;
+        }
         value -= changeFactor;
         ClampNumberAndSetInputField();
     }
@@ -153,7 +227,7 @@ public class NumberInput : MonoBehaviour
     {
         value = Mathf.Clamp(value, minimumValue, maximumValue);
 
-        if (inputField != null)
+        if (inputField != null && !emptyValue)
         {
             inputField.text = value.ToString();
         }
