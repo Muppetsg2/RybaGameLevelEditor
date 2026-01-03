@@ -1,34 +1,38 @@
+using SFB;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
-using SFB;
 
 public enum Tool { Brush, Eraser, DisplacerEraser, DisplacerBrush };
 
 public class MainScript : MonoBehaviour
 {
-    // Map Texture
-    private Texture2D mapTex = null;
-    [Header("Map Texture")]
-    [SerializeField] private RawImage image;
-    private bool isTextureLoaded = false;
+    public bool isLevelCreated = false;
+    [SerializeField] private Color defaultColor = new(0f, 0f, 0f, 0.988f);
+    [SerializeField] private Color gridColor = Color.white;
+
+    // Draw Texture
+    [Header("Draw Texture")]
+    private Texture2D drawTexture = null;
+    [SerializeField] private RawImage drawImage; // image before
 
     // Raw Image Dimensions
-    RectTransform imageRect;
-    float ImageRectWidth
+    RectTransform drawImageRect;
+    float DrawImageRectWidth
     {
         get
         {
-            return imageRect.rect.width;
+            return drawImageRect.rect.width;
         }
     }
-    float ImageRectHeight
+    float DrawImageRectHeight
     {
         get
         {
-            return imageRect.rect.height;
+            return drawImageRect.rect.height;
         }
     }
 
@@ -94,22 +98,25 @@ public class MainScript : MonoBehaviour
     // Pivot
     Vector2 pivotPos = new(.5f, .5f);
 
-    // Pointer Texture
-    private Texture2D pointerTex = null;
-    [Header("Pointer Texture")]
-    [SerializeField] private RawImage pointerImage;
+    // Pointer Indicator Texture
+    private Texture2D pointerIndicatorTexture = null;
 
-    // Vertex Map Texture
-    private Texture2D drawTex = null;
-    [Header("Draw Texture")]
-    [SerializeField] private RawImage drawImage;
+    [Header("Pointer Indicator Texture")]
+    [SerializeField]
+    private RawImage pointerIndicatorImage;
 
     // Grid Texture
-    private Texture2D gridTex = null;
+    private Texture2D gridTexture = null;
+
     [Header("Grid Texture")]
-    [SerializeField] private int gridPixelsPerPixelWidth = 25;
-    [SerializeField] private int gridPixelsPerPixelHeight = 25;
-    [SerializeField] private RawImage gridImage;
+    [SerializeField] 
+    private int gridPixelsPerPixelWidth = 25;
+
+    [SerializeField]
+    private int gridPixelsPerPixelHeight = 25;
+
+    [SerializeField]
+    private RawImage gridImage;
 
     // Moves
     private List<IMove> moves = new();
@@ -125,43 +132,43 @@ public class MainScript : MonoBehaviour
 
     private void Start()
     {
-        imageRect = image.GetComponent<RectTransform>();
-        isTextureLoaded = false;
-        DefaultCursor();
+        drawImageRect = drawImage.GetComponent<RectTransform>();
+        //DefaultCursor();
     }
 
     private void Update()
     {
         RectTransformUtility.ScreenPointToLocalPointInRectangle(viewRect, Input.mousePosition, Camera.main, out mouseViewPos);
 
-        mouseViewPos.x = ViewRectWidth - (ViewRectWidth / 2f - mouseViewPos.x);
-        mouseViewPos.y = -((ViewRectHeight / 2f - mouseViewPos.y) - ViewRectHeight);
+        mouseViewPos.x = ViewRectWidth - (ViewRectWidth * 0.5f - mouseViewPos.x);
+        mouseViewPos.y = -((ViewRectHeight * 0.5f - mouseViewPos.y) - ViewRectHeight);
 
-        if (isTextureLoaded && !isInteractionBlocked && mouseViewPos.x >= 0f && mouseViewPos.x <= ViewRectWidth && mouseViewPos.y >= 0f && mouseViewPos.y <= ViewRectHeight)
+        if (isLevelCreated && !isInteractionBlocked && mouseViewPos.x >= 0f && mouseViewPos.x <= ViewRectWidth && mouseViewPos.y >= 0f && mouseViewPos.y <= ViewRectHeight)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(imageRect, Input.mousePosition, Camera.main, out mouseImagePos);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(drawImageRect, Input.mousePosition, Camera.main, out mouseImagePos);
 
             // Calculate Pixel Position
-            mouseImagePos.x = ImageRectWidth - (ImageRectWidth / 2f - mouseImagePos.x);
-            mouseImagePos.y = -((ImageRectHeight / 2f - mouseImagePos.y) - ImageRectHeight);
+            mouseImagePos.x = DrawImageRectWidth - (DrawImageRectWidth * 0.5f - mouseImagePos.x);
+            mouseImagePos.y = -((DrawImageRectHeight * 0.5f - mouseImagePos.y) - DrawImageRectHeight);
 
             // Calculate Pivot
-            pivotPos.x = mouseImagePos.x / ImageRectWidth;
-            pivotPos.y = mouseImagePos.y / ImageRectHeight;
+            pivotPos.x = mouseImagePos.x / DrawImageRectWidth;
+            pivotPos.y = mouseImagePos.y / DrawImageRectHeight;
 
-            PixelPosX = (int)Mathf.Clamp(mouseImagePos.x / pixelWidth, 0f, mapTex.width - 1);
-            PixelPosY = (int)Mathf.Clamp(mouseImagePos.y / pixelHeight, 0f, mapTex.height - 1);
+            PixelPosX = (int)Mathf.Clamp(mouseImagePos.x / pixelWidth, 0f, drawTexture.width - 1);
+            PixelPosY = (int)Mathf.Clamp(mouseImagePos.y / pixelHeight, 0f, drawTexture.height - 1);
 
+            /*
             if (Input.GetMouseButtonDown(0))
             {
                 if (CurrentTool == Tool.Brush)
                 {
-                    if (drawTex.GetPixel(PixelPosX, PixelPosY).a == 0f)
+                    if (drawTexture.GetPixel(PixelPosX, PixelPosY).a == 0f)
                     {
-                        DrawMove dm = new(ref drawTex, ref currentVertexGroup, currentPointerColor, _pixelPos);
+                        DrawMove dm = new(ref drawTexture, ref currentVertexGroup, currentPointerColor, _pixelPos);
                         if (currentVertexGroup.isFull)
                         {
-                            moves.Add(new VertexGroupCreationMove(dm, ref drawTex, ref currentVertexGroup));
+                            moves.Add(new VertexGroupCreationMove(dm, ref drawTexture, ref currentVertexGroup));
                         }
                         else
                         {
@@ -171,24 +178,24 @@ public class MainScript : MonoBehaviour
                 }
                 else if (CurrentTool == Tool.Eraser)
                 {
-                    if (drawTex.GetPixel(PixelPosX, PixelPosY).a != 0f)
+                    if (drawTexture.GetPixel(PixelPosX, PixelPosY).a != 0f)
                     {
-                        moves.Add(new EraseMove(ref drawTex, _pixelPos));
+                        moves.Add(new EraseMove(ref drawTexture, _pixelPos));
                     }
                 }
                 else if (CurrentTool == Tool.DisplacerEraser)
                 {
-                    if (drawTex.GetPixel(PixelPosX, PixelPosY).a != 0f)
+                    if (drawTexture.GetPixel(PixelPosX, PixelPosY).a != 0f)
                     {
-                        moves.Add(new DisplacerSelectMove(ref drawTex, ref mapTex, _pixelPos, out selectedID, ref currentVertexGroup));
+                        moves.Add(new DisplacerSelectMove(ref drawTexture, ref mapTex, _pixelPos, out selectedID, ref currentVertexGroup));
                         CurrentTool = Tool.DisplacerBrush;
                     }
                 }
                 else if (CurrentTool == Tool.DisplacerBrush)
                 {
-                    if (drawTex.GetPixel(PixelPosX, PixelPosY).a == 0f)
+                    if (drawTexture.GetPixel(PixelPosX, PixelPosY).a == 0f)
                     {
-                        moves.Add(new DisplacerDrawMove(ref drawTex, ref selectedID, selectedID, _pixelPos, ref currentVertexGroup));
+                        moves.Add(new DisplacerDrawMove(ref drawTexture, ref selectedID, selectedID, _pixelPos, ref currentVertexGroup));
                         CurrentTool = Tool.DisplacerEraser;
                     }
                 }
@@ -228,7 +235,9 @@ public class MainScript : MonoBehaviour
                     }
                 }
             }
+            */
         }
+        /*
         else
         {
             if (IsScaling)
@@ -285,6 +294,7 @@ public class MainScript : MonoBehaviour
         {
             IsScaling = false;
         }
+        */
     }
 
     // Default Options
@@ -295,23 +305,28 @@ public class MainScript : MonoBehaviour
 
         currentVertexGroup.Clear();
 
+        /*
         currentScale.x = 1.0f;
         currentScale.y = 1.0f * mapTex.height / mapTex.width;
-        imageRect.localScale = currentScale;
+        drawImageRect.localScale = currentScale;
         minScale = currentScale;
+        */
 
-        pixelWidth = ImageRectWidth / mapTex.width;
-        pixelHeight = ImageRectHeight / mapTex.height;
+        pixelWidth = DrawImageRectWidth / drawTexture.width;
+        pixelHeight = DrawImageRectHeight / drawTexture.height;
 
+        /*
         currentMove = Vector2.zero;
-        imageRect.transform.localPosition = currentMove;
+        drawImageRect.transform.localPosition = currentMove;
         scrollMoveEnabled = false;
+        */
 
         pivotPos = Vector2.one * .5f;
 
-        ChangeToBrush(false, false);
+        //ChangeToBrush(false, false);
     }
 
+    /*
     // Scale
     Vector2 minScale = Vector2.one;
     Vector2 currentScale = Vector2.one;
@@ -353,21 +368,21 @@ public class MainScript : MonoBehaviour
         if (currentScale.x < minScale.x || currentScale.y < minScale.y)
         {
             currentScale = minScale;
-            imageRect.localScale = currentScale;
+            drawImageRect.localScale = currentScale;
         }
         else
         {
-            imageRect.localScale = currentScale;
+            drawImageRect.localScale = currentScale;
 
-            Vector2 toMove = (pivotPos - imageRect.pivot) * scaleSensitivity * Input.mouseScrollDelta.y;
-            toMove.x *= ImageRectWidth;
-            toMove.y *= ImageRectHeight;
+            Vector2 toMove = (pivotPos - drawImageRect.pivot) * scaleSensitivity * Input.mouseScrollDelta.y;
+            toMove.x *= DrawImageRectWidth;
+            toMove.y *= DrawImageRectHeight;
             currentMove -= toMove;
-            imageRect.transform.localPosition = currentMove;
+            drawImageRect.transform.localPosition = currentMove;
         }
         
-        pixelWidth = ImageRectWidth / mapTex.width;
-        pixelHeight = ImageRectHeight / mapTex.height;
+        pixelWidth = DrawImageRectWidth / mapTex.width;
+        pixelHeight = DrawImageRectHeight / mapTex.height;
     }
 
     // Move
@@ -385,7 +400,7 @@ public class MainScript : MonoBehaviour
             currentMove.y -= moveSensitivity * Input.mouseScrollDelta.y;
         }
 
-        imageRect.transform.localPosition = currentMove;
+        drawImageRect.transform.localPosition = currentMove;
     }
 
     // Scroll Button Move
@@ -395,115 +410,110 @@ public class MainScript : MonoBehaviour
     void ScrollButtonMove()
     {
         currentMove -= ((Vector2)Input.mousePosition - inizializedMousePosition) * 0.01f * moveSensitivity;
-        imageRect.transform.localPosition = currentMove;
+        drawImageRect.transform.localPosition = currentMove;
     }
+    */
 
     // Pointer Values
     Vector2 lastPointerPos = new();
     Color currentPointerColor = new();
     void UpdateDrawPointer()
     {
-        pointerTex.SetPixel((int)lastPointerPos.x, (int)lastPointerPos.y, new Color(0,0,0,0));
+        pointerIndicatorTexture.SetPixel((int)lastPointerPos.x, (int)lastPointerPos.y, new Color(0,0,0,0));
         lastPointerPos.x = PixelPosX;
         lastPointerPos.y = PixelPosY;
-        Color imagePixelColor = drawTex.GetPixel((int)lastPointerPos.x, (int)lastPointerPos.y);
-        if (imagePixelColor.a == 0)
-        {
-            imagePixelColor = mapTex.GetPixel((int)lastPointerPos.x, (int)lastPointerPos.y);
-        }
+        Color imagePixelColor = drawTexture.GetPixel((int)lastPointerPos.x, (int)lastPointerPos.y);
+        // TODO: Change way that its checking color brightness
         currentPointerColor = (imagePixelColor.r + imagePixelColor.g + imagePixelColor.b) / 3f >= 0.5f ? Color.black : Color.white;
-        pointerTex.SetPixel((int)lastPointerPos.x, (int)lastPointerPos.y, currentPointerColor);
-        pointerTex.Apply();
+        pointerIndicatorTexture.SetPixel((int)lastPointerPos.x, (int)lastPointerPos.y, currentPointerColor);
+        pointerIndicatorTexture.Apply();
     }
 
     // Grid
     void GenerateGrid(int mapWidth, int mapHeight)
     {
-        gridTex = new(mapWidth * (gridPixelsPerPixelWidth + 1) + 1, mapHeight * (gridPixelsPerPixelHeight + 1) + 1);
-        gridTex.filterMode = FilterMode.Point;
-        for (int x = 0; x <= mapWidth * (gridPixelsPerPixelWidth + 1) + 1; x++)
+        gridTexture = new(mapWidth * (gridPixelsPerPixelWidth + 1) + 1, mapHeight * (gridPixelsPerPixelHeight + 1) + 1)
         {
-            for (int y = 0; y <= mapHeight * (gridPixelsPerPixelHeight + 1) + 1; y++)
+            filterMode = FilterMode.Point
+        };
+
+        for (int x = 0; x <= mapWidth * (gridPixelsPerPixelWidth + 1) + 1; ++x)
+        {
+            for (int y = 0; y <= mapHeight * (gridPixelsPerPixelHeight + 1) + 1; ++y)
             {
                 if (x % (gridPixelsPerPixelWidth + 1) == 0 || y % (gridPixelsPerPixelHeight + 1) == 0)
                 {
-                    gridTex.SetPixel(x, y, Color.black);
+                    gridTexture.SetPixel(x, y, gridColor);
+                }
+                else if (x == 0 || y == 0 || x == mapWidth * (gridPixelsPerPixelWidth + 1) + 1 || y == mapHeight * (gridPixelsPerPixelHeight + 1) + 1)
+                {
+                    gridTexture.SetPixel(x, y, gridColor);
                 }
                 else
                 {
-                    gridTex.SetPixel(x, y, new Color(0, 0, 0, 0));
+                    gridTexture.SetPixel(x, y, new Color(0f, 0f, 0f, 0f));
                 }
             }
         }
-        gridTex.Apply();
-        gridImage.texture = gridTex;
-        gridImage.color += new Color(0, 0, 0, 1);
+        gridTexture.Apply();
+        gridImage.texture = gridTexture;
+        gridImage.color = Color.white;
     }
 
     // Image
-    public void LoadImage()
+    public void CreateLevelTexture(uint width, uint height)
     {
-        //StandaloneFileBrowserWindows fileBrowser = new();
-        string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Map Image", Application.dataPath, new ExtensionFilter[] { new ExtensionFilter("map image", new string[] { "png" }) }, false);
-        if (filePaths.Length != 0)
+        pointerIndicatorTexture = new((int)width, (int)height)
         {
-            byte[] bytes = File.ReadAllBytes(filePaths[0]);
-            mapTex = new(1, 1);
-            mapTex.filterMode = FilterMode.Point;
-            mapTex.LoadImage(bytes);
-            image.texture = mapTex;
-            image.color += new Color(0,0,0,1f);
+            filterMode = FilterMode.Point
+        };
 
-            isTextureLoaded = true;
+        drawTexture = new((int)width, (int)height)
+        {
+            filterMode = FilterMode.Point
+        };
 
-            drawTex = new(mapTex.width, mapTex.height);
-            drawTex.filterMode = FilterMode.Point;
-            pointerTex = new(mapTex.width, mapTex.height);
-            pointerTex.filterMode = FilterMode.Point;
-            Color def = new(0, 0, 0, 0);
-            for (int x = 0; x < drawTex.width; x++)
+        Color def = defaultColor;
+        for (int x = 0; x < drawTexture.width; ++x)
+        {
+            for (int y = 0; y < drawTexture.height; ++y)
             {
-                for (int y = 0; y < drawTex.height; y++)
-                {
-                    drawTex.SetPixel(x, y, def);
-                    pointerTex.SetPixel(x, y, def);
-                }
+                drawTexture.SetPixel(x, y, def);
+                pointerIndicatorTexture.SetPixel(x, y, def);
             }
-            drawTex.Apply();
-            drawImage.texture = drawTex;
-            drawImage.color += new Color(0, 0, 0, 1f);
-            pointerTex.Apply();
-            pointerImage.texture = pointerTex;
-            pointerImage.color += new Color(0, 0, 0, 1f);
-
-            GenerateGrid(mapTex.width, mapTex.height);
-
-            ResetSettings();
         }
-        else
-        {
-            Debug.Log("No files loaded");
-        }
+
+        drawTexture.Apply();
+        drawImage.texture = drawTexture;
+        drawImage.color = Color.white;
+
+        pointerIndicatorTexture.Apply();
+        pointerIndicatorImage.texture = pointerIndicatorTexture;
+        pointerIndicatorImage.color = Color.white;
+
+        isLevelCreated = true;
+
+        GenerateGrid(drawTexture.width, drawTexture.height);
+
+        ResetSettings();
     }
 
+    /*
     public void SaveImage()
     {
-        if (isTextureLoaded)
+        string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Image", Application.dataPath, "LevelMap.png", new ExtensionFilter[] { new ExtensionFilter("Level Map Image", new string[] { "png" }) });
+        if (filePath != null && filePath != "")
         {
-            //StandaloneFileBrowserWindows browser = new();
-            string filePath = StandaloneFileBrowser.SaveFilePanel("Save Vertex Map Image", Application.dataPath, "VertexMap.png", new ExtensionFilter[] { new ExtensionFilter("Vertex Map Image", new string[] { "png" }) });
-            if (filePath != null && filePath != "")
-            {
-                byte[] bytes = drawTex.EncodeToPNG();
-                File.WriteAllBytes(filePath, bytes);
-            }
+            byte[] bytes = drawTexture.EncodeToPNG();
+            File.WriteAllBytes(filePath, bytes);
         }
     }
+    */
 
     // Draft
+    /*
     public void LoadDraft()
     {
-        //StandaloneFileBrowserWindows fileBrowser = new();
         string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Vertex Map Draft", Application.dataPath, new ExtensionFilter[] { new ExtensionFilter("Vertex Map Draft", new string[] { "vmd" }) }, false);
         if (filePaths.Length != 0)
         {
@@ -520,7 +530,7 @@ public class MainScript : MonoBehaviour
             image.texture = mapTex;
             image.color += new Color(0, 0, 0, 1f);
 
-            isTextureLoaded = true;
+            isLevelCreated = true;
 
             drawTex = new(1, 1);
             drawTex.filterMode = FilterMode.Point;
@@ -528,19 +538,19 @@ public class MainScript : MonoBehaviour
             drawImage.texture = drawTex;
             drawImage.color += new Color(0, 0, 0, 1f);
 
-            pointerTex = new(mapTex.width, mapTex.height);
-            pointerTex.filterMode = FilterMode.Point;
+            pointerIndicatorTexture = new(mapTex.width, mapTex.height);
+            pointerIndicatorTexture.filterMode = FilterMode.Point;
             Color def = new(0, 0, 0, 0);
             for (int x = 0; x < drawTex.width; x++)
             {
                 for (int y = 0; y < drawTex.height; y++)
                 {
-                    pointerTex.SetPixel(x, y, def);
+                    pointerIndicatorTexture.SetPixel(x, y, def);
                 }
             }
-            pointerTex.Apply();
-            pointerImage.texture = pointerTex;
-            pointerImage.color += new Color(0, 0, 0, 1f);
+            pointerIndicatorTexture.Apply();
+            pointerIndicatorImage.texture = pointerIndicatorTexture;
+            pointerIndicatorImage.color += new Color(0, 0, 0, 1f);
 
             GenerateGrid(mapTex.width, mapTex.height);
 
@@ -575,7 +585,6 @@ public class MainScript : MonoBehaviour
                     drawTex.Apply();
                     currentVertexGroup.Clear();
 
-                    //StandaloneFileBrowserWindows browser = new();
                     string filePath = StandaloneFileBrowser.SaveFilePanel("Save Vertex Map Draft", Application.dataPath, "VertexMapDraft.vmd", new ExtensionFilter[] { new ExtensionFilter("Vertex Map Draft", new string[] { "vmd" }) });
                     if (filePath != null && filePath != "")
                     {
@@ -599,7 +608,6 @@ public class MainScript : MonoBehaviour
                 return;
             }
 
-            //StandaloneFileBrowserWindows browser = new();
             string filePath = StandaloneFileBrowser.SaveFilePanel("Save Vertex Map Draft", Application.dataPath, "VertexMapDraft.vmd", new ExtensionFilter[] { new ExtensionFilter("Vertex Map Draft", new string[] { "vmd" }) });
             if (filePath != null && filePath != "")
             {
@@ -616,8 +624,10 @@ public class MainScript : MonoBehaviour
             }
         }
     }
+    */
 
     // Tools
+    /*
     [Header("Tools")]
     [SerializeField] private Button brushButton;
     [SerializeField] private Button eraserButton;
@@ -877,4 +887,5 @@ public class MainScript : MonoBehaviour
             Cursor.SetCursor(scrollMoveCursor, new Vector2(32,32), CursorMode.Auto);
         }
     }
+    */
 }

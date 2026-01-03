@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 public class StartMenuManager : MonoBehaviour
 {
@@ -39,6 +40,9 @@ public class StartMenuManager : MonoBehaviour
 
     [SerializeField]
     private List<Preset> presets;
+
+    public UnityEvent onLoadProject;
+    public UnityEvent<uint, uint> onNewProject;
 
     private int dropdownValueUpdateCounter = 2;
 
@@ -128,11 +132,15 @@ public class StartMenuManager : MonoBehaviour
 
     public void NewProjectEditor()
     {
+        uint width = widthInput != null ? (uint)widthInput.GetValue() : 1;
+        uint height = heightInput != null ? (uint)heightInput.GetValue() : 1;
+        onNewProject?.Invoke(width, height);
         OpenEditor();
     }
 
     public void LoadProjectEditor()
     {
+        onLoadProject?.Invoke();
         OpenEditor();
     }
 
