@@ -10,17 +10,21 @@ public enum Tool { Brush, Eraser, DisplacerEraser, DisplacerBrush };
 
 public class MainScript : MonoBehaviour
 {
-    public bool isLevelCreated = false;
-    [SerializeField] private Color defaultColor = new(0f, 0f, 0f, 0.988f);
+    // General Flags
+    private bool isLevelCreated = false;
+
+    // Colors
+    [Header("Colors")]
+    [SerializeField] private Color defaultTileColor = new(0f, 0f, 0f, 0.988f);
     [SerializeField] private Color pointerIndicatorTexColor = new(0f, 0f, 0f, 0f);
     [SerializeField] private Color gridColor = Color.white;
 
     // Draw Texture
-    [Header("Draw Texture")]
     private Texture2D drawTexture = null;
+    [Header("Draw Image")]
     [SerializeField] private RawImage drawImage; // image before
 
-    // Raw Image Dimensions
+    // Raw Draw Image Dimensions
     private RectTransform drawImageRect;
     float DrawImageRectWidth
     {
@@ -103,21 +107,17 @@ public class MainScript : MonoBehaviour
     private Texture2D pointerIndicatorTexture = null;
 
     [Header("Pointer Indicator Texture")]
-    [SerializeField]
-    private RawImage pointerIndicatorImage;
+    [SerializeField] private RawImage pointerIndicatorImage;
 
     // Grid Texture
     private Texture2D gridTexture = null;
 
     [Header("Grid Texture")]
-    [SerializeField] 
-    private int gridPixelsPerPixelWidth = 25;
+    [SerializeField] private int gridPixelsPerPixelWidth = 25;
 
-    [SerializeField]
-    private int gridPixelsPerPixelHeight = 25;
+    [SerializeField] private int gridPixelsPerPixelHeight = 25;
 
-    [SerializeField]
-    private RawImage gridImage;
+    [SerializeField] private RawImage gridImage;
 
     // Moves
     private List<IMove> moves = new();
@@ -155,13 +155,6 @@ public class MainScript : MonoBehaviour
 
             PixelPosX = (int)Mathf.Clamp(mouseImagePos.x / pixelWidth, 0f, drawTexture.width - 1);
             PixelPosY = (int)Mathf.Clamp(mouseImagePos.y / pixelHeight, 0f, drawTexture.height - 1);
-
-            //Debug.Log("MouseImagePos: " + mouseImagePos.ToString());
-            //Debug.Log("Pixel: " + pixelWidth + ", " + pixelHeight);
-            //Debug.Log("Pixel Pos: " + PixelPosX + ", " + PixelPosY);
-            //Debug.Log("LastPointer: " + lastPointerPos.ToString());
-            //Debug.Log("MouseViewPos: " + mouseViewPos.ToString());
-            //Debug.Log("DrawImageRectWidth: " + DrawImageRectWidth + ", " + DrawImageRectHeight);
 
             /*
             if (Input.GetMouseButtonDown(0))
@@ -204,43 +197,35 @@ public class MainScript : MonoBehaviour
                         CurrentTool = Tool.DisplacerEraser;
                     }
                 }
-            }
+            }*/
 
             if (Input.mouseScrollDelta.y != 0f)
             {
+                /*
                 if (Input.GetKey(KeyCode.LeftControl))
                 {
                     IsScaling = true;
                     Scale();
                 }
                 else
+                */
                 {
                     Move();
                 }
             }
 
-            if (Input.GetMouseButtonDown(2) && !scrollMoveEnabledChanged)
+            if (Input.GetMouseButtonDown(2))
             {
-                scrollMoveEnabled = !scrollMoveEnabled;
-                scrollMoveEnabledChanged = true;
-                if (scrollMoveEnabled)
-                {
-                    ScrollMoveCursor();
-                    inizializedMousePosition = Input.mousePosition;
-                }
-                else
-                {
-                    if (isCursorInView)
-                    {
-                        ToolCursor();
-                    }
-                    else
-                    {
-                        DefaultCursor();
-                    }
-                }
+                scrollMoveEnabled = true;
+                startMousePos = Input.mousePosition;
+                startImagePos = drawImageRect.transform.localPosition;
             }
-            */
+
+            if (scrollMoveEnabled)
+            {
+                //ScrollMoveCursor();
+                ScrollButtonMove();
+            }
         }
         /*
         else
@@ -250,7 +235,28 @@ public class MainScript : MonoBehaviour
                 IsScaling = false;
             }
         }
+        */
 
+        if (Input.GetMouseButtonUp(2))
+        {
+            scrollMoveEnabled = false;
+        }
+
+        if (!scrollMoveEnabled)
+        {
+            /*
+            if (isCursorInView)
+            {
+                ToolCursor();
+            }
+            else
+            {
+                DefaultCursor();
+            }
+            */
+        }
+
+        /*
         if (Input.GetMouseButtonDown(1) && moves.Count != 0)
         {
             IMove lastMove = moves[^1];
@@ -275,26 +281,9 @@ public class MainScript : MonoBehaviour
                 CurrentTool = Tool.DisplacerBrush;
             }
         }
+        */
 
-        if (scrollMoveEnabled && !scrollMoveEnabledChanged)
-        {
-            ScrollButtonMove();
-            if (Input.GetMouseButtonDown(2))
-            {
-                scrollMoveEnabled = false;
-                scrollMoveEnabledChanged = true;
-                if (isCursorInView)
-                {
-                    ToolCursor();
-                }
-                else
-                {
-                    DefaultCursor();
-                }
-            }
-        }
-        scrollMoveEnabledChanged = false;
-
+        /*
         if (IsScaling && Input.GetKeyUp(KeyCode.LeftControl))
         {
             IsScaling = false;
@@ -318,11 +307,8 @@ public class MainScript : MonoBehaviour
         pixelWidth = DrawImageRectWidth / drawTexture.width;
         pixelHeight = DrawImageRectHeight / drawTexture.height;
 
-        /*
-        currentMove = Vector2.zero;
-        drawImageRect.transform.localPosition = currentMove;
+        drawImageRect.transform.localPosition = Vector2.zero;
         scrollMoveEnabled = false;
-        */
 
         mouseImageUVPos = Vector2.one;
 
@@ -387,35 +373,37 @@ public class MainScript : MonoBehaviour
         pixelWidth = DrawImageRectWidth / mapTex.width;
         pixelHeight = DrawImageRectHeight / mapTex.height;
     }
+    */
 
     // Move
-    Vector2 currentMove = Vector2.zero;
+    Vector3 startImagePos = Vector3.zero;
+    Vector3 startMousePos = Vector3.zero;
     [Header("Movement")]
-    public float moveSensitivity = 1.0f;
+    public float scrollMoveSensitivity = 5.0f;
     void Move()
     {
+        Vector3 currentMove = Vector3.zero;
+
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            currentMove.x += moveSensitivity * Input.mouseScrollDelta.y;
+            currentMove.x += Input.mouseScrollDelta.y * scrollMoveSensitivity;
         }
         else
         {
-            currentMove.y -= moveSensitivity * Input.mouseScrollDelta.y;
+            currentMove.y -= Input.mouseScrollDelta.y * scrollMoveSensitivity;
         }
 
-        drawImageRect.transform.localPosition = currentMove;
+        drawImageRect.transform.localPosition = drawImageRect.transform.localPosition + currentMove;
     }
 
     // Scroll Button Move
     bool scrollMoveEnabled = false;
-    bool scrollMoveEnabledChanged = false;
-    Vector2 inizializedMousePosition = Vector2.zero;
     void ScrollButtonMove()
     {
-        currentMove -= ((Vector2)Input.mousePosition - inizializedMousePosition) * 0.01f * moveSensitivity;
-        drawImageRect.transform.localPosition = currentMove;
+        Vector3 mouseDelta = Input.mousePosition - startMousePos;
+
+        drawImageRect.transform.localPosition = startImagePos + new Vector3(mouseDelta.x, mouseDelta.y, 0);
     }
-    */
 
     // Pointer Values
     Vector2 lastPointerPos = new();
@@ -484,7 +472,7 @@ public class MainScript : MonoBehaviour
         {
             for (int y = 0; y < drawTexture.height; ++y)
             {
-                drawTexture.SetPixel(x, y, defaultColor);
+                drawTexture.SetPixel(x, y, defaultTileColor);
                 pointerIndicatorTexture.SetPixel(x, y, pointerIndicatorTexColor);
             }
         }

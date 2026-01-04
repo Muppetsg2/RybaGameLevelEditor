@@ -431,12 +431,14 @@ MonoBehaviour:
   defaultColor: {r: 0, g: 0, b: 0, a: 0.9882353}
   pointerIndicatorTexColor: {r: 0, g: 0, b: 0, a: 0}
   gridColor: {r: 1, g: 0, b: 0, a: 1}
+  windowRect: {fileID: 2107501201}
   drawImage: {fileID: 1461008929}
   viewRect: {fileID: 619533600}
   pointerIndicatorImage: {fileID: 374418452}
   gridPixelsPerPixelWidth: 10
   gridPixelsPerPixelHeight: 10
   gridImage: {fileID: 1706076710}
+  scrollMoveSensitivity: 5
 --- !u!4 &182806290
 Transform:
   m_ObjectHideFlags: 0
