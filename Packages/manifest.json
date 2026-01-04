@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "com.dbrizov.naughtyattributes": "https://github.com/dbrizov/NaughtyAttributes.git#upm",
+	"com.ltmx.cs.extensions": "https://github.com/ltmx/Unity.CSharp.Extensions.git#main",
+	"com.ltmx.unity.qoi": "https://github.com/ltmx/Unity.QOI.git#2.1.0",
     "com.unity.ai.navigation": "2.0.9",
     "com.unity.collab-proxy": "2.9.3",
     "com.unity.feature.2d": "2.0.1",
