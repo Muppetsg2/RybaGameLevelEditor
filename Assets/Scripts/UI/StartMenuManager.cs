@@ -134,14 +134,14 @@ public class StartMenuManager : MonoBehaviour
     {
         uint width = widthInput != null ? (uint)widthInput.GetValue() : 1;
         uint height = heightInput != null ? (uint)heightInput.GetValue() : 1;
-        onNewProject?.Invoke(width, height);
         OpenEditor();
+        onNewProject?.Invoke(width, height);
     }
 
     public void LoadProjectEditor()
     {
-        onLoadProject?.Invoke();
         OpenEditor();
+        onLoadProject?.Invoke();
     }
 
     public void OpenEditor()

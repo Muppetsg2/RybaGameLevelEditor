@@ -12,6 +12,7 @@ public class MainScript : MonoBehaviour
 {
     public bool isLevelCreated = false;
     [SerializeField] private Color defaultColor = new(0f, 0f, 0f, 0.988f);
+    [SerializeField] private Color pointerIndicatorTexColor = new(0f, 0f, 0f, 0f);
     [SerializeField] private Color gridColor = Color.white;
 
     // Draw Texture
@@ -20,7 +21,7 @@ public class MainScript : MonoBehaviour
     [SerializeField] private RawImage drawImage; // image before
 
     // Raw Image Dimensions
-    RectTransform drawImageRect;
+    private RectTransform drawImageRect;
     float DrawImageRectWidth
     {
         get
@@ -95,8 +96,8 @@ public class MainScript : MonoBehaviour
         }
     }
 
-    // Pivot
-    Vector2 pivotPos = new(.5f, .5f);
+    // Mouse Image UV Pos
+    private Vector2 mouseImageUVPos = Vector2.one;
 
     // Pointer Indicator Texture
     private Texture2D pointerIndicatorTexture = null;
@@ -121,9 +122,6 @@ public class MainScript : MonoBehaviour
     // Moves
     private List<IMove> moves = new();
 
-    // Vertex Group
-    private VertexGroup currentVertexGroup = new();
-
     // Displacer
     private int selectedID = -1;
 
@@ -140,23 +138,30 @@ public class MainScript : MonoBehaviour
     {
         RectTransformUtility.ScreenPointToLocalPointInRectangle(viewRect, Input.mousePosition, Camera.main, out mouseViewPos);
 
-        mouseViewPos.x = ViewRectWidth - (ViewRectWidth * 0.5f - mouseViewPos.x);
-        mouseViewPos.y = -((ViewRectHeight * 0.5f - mouseViewPos.y) - ViewRectHeight);
+        mouseViewPos.x += ViewRectWidth * 0.5f;
+        mouseViewPos.y += ViewRectHeight * 0.5f;
 
         if (isLevelCreated && !isInteractionBlocked && mouseViewPos.x >= 0f && mouseViewPos.x <= ViewRectWidth && mouseViewPos.y >= 0f && mouseViewPos.y <= ViewRectHeight)
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(drawImageRect, Input.mousePosition, Camera.main, out mouseImagePos);
 
             // Calculate Pixel Position
-            mouseImagePos.x = DrawImageRectWidth - (DrawImageRectWidth * 0.5f - mouseImagePos.x);
-            mouseImagePos.y = -((DrawImageRectHeight * 0.5f - mouseImagePos.y) - DrawImageRectHeight);
+            mouseImagePos.x += DrawImageRectWidth * 0.5f;
+            mouseImagePos.y += DrawImageRectHeight * 0.5f;
 
-            // Calculate Pivot
-            pivotPos.x = mouseImagePos.x / DrawImageRectWidth;
-            pivotPos.y = mouseImagePos.y / DrawImageRectHeight;
+            // Calculate position in 0–1 UV space
+            mouseImageUVPos.x = mouseImagePos.x / DrawImageRectWidth;
+            mouseImageUVPos.y = mouseImagePos.y / DrawImageRectHeight;
 
             PixelPosX = (int)Mathf.Clamp(mouseImagePos.x / pixelWidth, 0f, drawTexture.width - 1);
             PixelPosY = (int)Mathf.Clamp(mouseImagePos.y / pixelHeight, 0f, drawTexture.height - 1);
+
+            //Debug.Log("MouseImagePos: " + mouseImagePos.ToString());
+            //Debug.Log("Pixel: " + pixelWidth + ", " + pixelHeight);
+            //Debug.Log("Pixel Pos: " + PixelPosX + ", " + PixelPosY);
+            //Debug.Log("LastPointer: " + lastPointerPos.ToString());
+            //Debug.Log("MouseViewPos: " + mouseViewPos.ToString());
+            //Debug.Log("DrawImageRectWidth: " + DrawImageRectWidth + ", " + DrawImageRectHeight);
 
             /*
             if (Input.GetMouseButtonDown(0))
@@ -303,8 +308,6 @@ public class MainScript : MonoBehaviour
         lastPointerPos.x = 0f;
         lastPointerPos.y = 0f;
 
-        currentVertexGroup.Clear();
-
         /*
         currentScale.x = 1.0f;
         currentScale.y = 1.0f * mapTex.height / mapTex.width;
@@ -321,7 +324,7 @@ public class MainScript : MonoBehaviour
         scrollMoveEnabled = false;
         */
 
-        pivotPos = Vector2.one * .5f;
+        mouseImageUVPos = Vector2.one;
 
         //ChangeToBrush(false, false);
     }
@@ -417,14 +420,18 @@ public class MainScript : MonoBehaviour
     // Pointer Values
     Vector2 lastPointerPos = new();
     Color currentPointerColor = new();
+    float GetLuminance(Color color)
+    {
+        return 0.2126f * color.linear.r + 0.7152f * color.linear.g + 0.0722f * color.linear.b;
+    }
+
     void UpdateDrawPointer()
     {
-        pointerIndicatorTexture.SetPixel((int)lastPointerPos.x, (int)lastPointerPos.y, new Color(0,0,0,0));
+        pointerIndicatorTexture.SetPixel((int)lastPointerPos.x, (int)lastPointerPos.y, pointerIndicatorTexColor);
         lastPointerPos.x = PixelPosX;
         lastPointerPos.y = PixelPosY;
         Color imagePixelColor = drawTexture.GetPixel((int)lastPointerPos.x, (int)lastPointerPos.y);
-        // TODO: Change way that its checking color brightness
-        currentPointerColor = (imagePixelColor.r + imagePixelColor.g + imagePixelColor.b) / 3f >= 0.5f ? Color.black : Color.white;
+        currentPointerColor = GetLuminance(imagePixelColor) > 0.5f ? Color.black : Color.white;
         pointerIndicatorTexture.SetPixel((int)lastPointerPos.x, (int)lastPointerPos.y, currentPointerColor);
         pointerIndicatorTexture.Apply();
     }
@@ -473,13 +480,12 @@ public class MainScript : MonoBehaviour
             filterMode = FilterMode.Point
         };
 
-        Color def = defaultColor;
         for (int x = 0; x < drawTexture.width; ++x)
         {
             for (int y = 0; y < drawTexture.height; ++y)
             {
-                drawTexture.SetPixel(x, y, def);
-                pointerIndicatorTexture.SetPixel(x, y, def);
+                drawTexture.SetPixel(x, y, defaultColor);
+                pointerIndicatorTexture.SetPixel(x, y, pointerIndicatorTexColor);
             }
         }
 
