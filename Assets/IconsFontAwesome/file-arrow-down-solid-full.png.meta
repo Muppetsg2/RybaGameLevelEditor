@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 09e14c83321fcc94c903de935d57301d
+guid: 2a967141b5b256a488b375bec96bb6bc
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8789380186953987584
-    second: play-solid-full_0
+      213: 8842264973443110254
+    second: file-arrow-down-solid-full_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: play-solid-full_0
+      name: file-arrow-down-solid-full_0
       rect:
         serializedVersion: 2
         x: 127
-        y: 95
-        width: 418
-        height: 450
+        y: 63
+        width: 386
+        height: 514
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 00a40c0c949d50680800000000000000
-      internalID: -8789380186953987584
+      spriteID: e6594ff152906ba70800000000000000
+      internalID: 8842264973443110254
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      play-solid-full_0: -8789380186953987584
+      file-arrow-down-solid-full_0: 8842264973443110254
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
