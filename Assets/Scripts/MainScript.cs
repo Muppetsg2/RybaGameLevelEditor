@@ -1,3 +1,4 @@
+using NaughtyAttributes;
 using SFB;
 using System;
 using System.Collections.Generic;
@@ -100,9 +101,6 @@ public class MainScript : MonoBehaviour
         }
     }
 
-    // Mouse Image UV Pos
-    private Vector2 mouseImageUVPos = Vector2.one;
-
     // Pointer Indicator Texture
     private Texture2D pointerIndicatorTexture = null;
 
@@ -150,8 +148,8 @@ public class MainScript : MonoBehaviour
             mouseImagePos.y += DrawImageRectHeight * 0.5f;
 
             // Calculate position in 0–1 UV space
-            mouseImageUVPos.x = mouseImagePos.x / DrawImageRectWidth;
-            mouseImageUVPos.y = mouseImagePos.y / DrawImageRectHeight;
+            scalePivotPos.x = mouseImagePos.x / DrawImageRectWidth;
+            scalePivotPos.y = mouseImagePos.y / DrawImageRectHeight;
 
             PixelPosX = (int)Mathf.Clamp(mouseImagePos.x / pixelWidth, 0f, drawTexture.width - 1);
             PixelPosY = (int)Mathf.Clamp(mouseImagePos.y / pixelHeight, 0f, drawTexture.height - 1);
@@ -201,14 +199,12 @@ public class MainScript : MonoBehaviour
 
             if (Input.mouseScrollDelta.y != 0f)
             {
-                /*
                 if (Input.GetKey(KeyCode.LeftControl))
                 {
                     IsScaling = true;
                     Scale();
                 }
                 else
-                */
                 {
                     Move();
                 }
@@ -297,12 +293,14 @@ public class MainScript : MonoBehaviour
         lastPointerPos.x = 0f;
         lastPointerPos.y = 0f;
 
-        /*
-        currentScale.x = 1.0f;
-        currentScale.y = 1.0f * mapTex.height / mapTex.width;
-        drawImageRect.localScale = currentScale;
-        minScale = currentScale;
-        */
+        drawImageRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, drawTexture.width);
+        drawImageRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, drawTexture.height);
+
+        minScale = GetMinScale();
+        maxScale = GetMaxScale();
+        currentScale = GetDefaultScale();
+
+        drawImageRect.localScale = new Vector3(currentScale, currentScale, 1.0f);
 
         pixelWidth = DrawImageRectWidth / drawTexture.width;
         pixelHeight = DrawImageRectHeight / drawTexture.height;
@@ -310,17 +308,19 @@ public class MainScript : MonoBehaviour
         drawImageRect.transform.localPosition = Vector2.zero;
         scrollMoveEnabled = false;
 
-        mouseImageUVPos = Vector2.one;
+        scalePivotPos = Vector2.one;
 
         //ChangeToBrush(false, false);
     }
 
-    /*
     // Scale
-    Vector2 minScale = Vector2.one;
-    Vector2 currentScale = Vector2.one;
+    private float currentScale = 1.0f;
+    private float minScale = 0.01f;
+    private float maxScale = 200.0f;
+    // Mouse Image UV Pos == scalePivotPos
+    private Vector2 scalePivotPos = Vector2.one;
     [Header("Scale")]
-    public float scaleSensitivity = 1.0f;
+    public float scrollScaleSensitivityPercent = 0.1f;
     bool isScaling = false;
     bool IsScaling
     {
@@ -333,6 +333,7 @@ public class MainScript : MonoBehaviour
             if (isScaling != value)
             {
                 isScaling = value;
+                /*
                 if (isScaling)
                 {
                     ScaleCursor();
@@ -348,38 +349,70 @@ public class MainScript : MonoBehaviour
                         DefaultCursor();
                     }
                 }
+                */
             }
         }
     }
+
+    float GetDefaultScale()
+    {
+        float scaleX = ViewRectWidth / DrawImageRectWidth;
+        float scaleY = ViewRectHeight / DrawImageRectHeight;
+        float computedScale = Mathf.Min(scaleX, scaleY) * 0.8f;
+        return Mathf.Clamp(computedScale, minScale, maxScale);
+    }
+
+    float GetMinScale()
+    {
+        float scaleX = 2f / DrawImageRectWidth;
+        float scaleY = 2f / DrawImageRectHeight;
+        float computedScale = Mathf.Min(scaleX, scaleY) * 0.8f;
+        return computedScale;
+    }
+
+    float GetMaxScale()
+    {
+        float scaleX = ViewRectWidth * 0.5f; // ViewRectWidth / 2f
+        float scaleY = ViewRectHeight * 0.5f; // ViewRectHeight / 2f
+        float computedScale = Mathf.Min(scaleX, scaleY) * 0.8f;
+        return computedScale;
+    }
+
     void Scale()
     {
-        currentScale += Vector2.one * scaleSensitivity * Input.mouseScrollDelta.y;
-        if (currentScale.x < minScale.x || currentScale.y < minScale.y)
+        currentScale += scrollScaleSensitivityPercent * currentScale * Input.mouseScrollDelta.y;
+        if (currentScale < minScale)
         {
             currentScale = minScale;
-            drawImageRect.localScale = currentScale;
+            drawImageRect.localScale = new Vector3(currentScale, currentScale, 1.0f);
+        }
+        else if (currentScale > maxScale)
+        {
+            currentScale = maxScale;
+            drawImageRect.localScale = new Vector3(currentScale, currentScale, 1.0f);
         }
         else
         {
-            drawImageRect.localScale = currentScale;
+            drawImageRect.localScale = new Vector3(currentScale, currentScale, 1.0f);
+            // TODO: Zrobic by skalowal tam gdzie myszka wskazuje
 
-            Vector2 toMove = (pivotPos - drawImageRect.pivot) * scaleSensitivity * Input.mouseScrollDelta.y;
-            toMove.x *= DrawImageRectWidth;
-            toMove.y *= DrawImageRectHeight;
-            currentMove -= toMove;
-            drawImageRect.transform.localPosition = currentMove;
+
+            //Vector2 toMove = (scalePivotPos - drawImageRect.pivot) * scaleSensitivity * Input.mouseScrollDelta.y;
+            //toMove.x *= DrawImageRectWidth;
+            //toMove.y *= DrawImageRectHeight;
+            //currentMove -= toMove;
+            //drawImageRect.transform.localPosition = currentMove;
         }
-        
-        pixelWidth = DrawImageRectWidth / mapTex.width;
-        pixelHeight = DrawImageRectHeight / mapTex.height;
+
+        pixelWidth = DrawImageRectWidth / drawTexture.width;
+        pixelHeight = DrawImageRectHeight / drawTexture.height;
     }
-    */
 
     // Move
     Vector3 startImagePos = Vector3.zero;
     Vector3 startMousePos = Vector3.zero;
     [Header("Movement")]
-    public float scrollMoveSensitivity = 5.0f;
+    public float scrollMoveSensitivity = 0.5f;
     void Move()
     {
         Vector3 currentMove = Vector3.zero;

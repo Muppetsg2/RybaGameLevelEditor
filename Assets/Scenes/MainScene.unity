@@ -436,6 +436,9 @@ MonoBehaviour:
   gridPixelsPerPixelWidth: 10
   gridPixelsPerPixelHeight: 10
   gridImage: {fileID: 1706076710}
+  minScale: 0.01
+  maxScale: 200
+  scrollScaleSensitivityPercent: 0.1
   scrollMoveSensitivity: 5
 --- !u!4 &182806290
 Transform:
