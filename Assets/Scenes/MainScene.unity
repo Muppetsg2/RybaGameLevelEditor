@@ -436,10 +436,21 @@ MonoBehaviour:
   gridPixelsPerPixelWidth: 10
   gridPixelsPerPixelHeight: 10
   gridImage: {fileID: 1706076710}
-  minScale: 0.01
-  maxScale: 200
   scrollScaleSensitivityPercent: 0.1
   scrollMoveSensitivity: 5
+  brushButton: {fileID: 1161185509}
+  eraserButton: {fileID: 185215941}
+  displacerButton: {fileID: 711745632}
+  pipetteButton: {fileID: 1448336400}
+  defaultCursor: {fileID: 0}
+  brushCursor: {fileID: 2800000, guid: e5f1ce214aac8bf4aae085952ba7a38a, type: 3}
+  eraserCursor: {fileID: 2800000, guid: c17b5e2ede4699647ae586f75f06ebc2, type: 3}
+  displacerTakeCursor: {fileID: 2800000, guid: 36798c09352a72545803b6794df4dd34, type: 3}
+  displacerPutCursor: {fileID: 2800000, guid: 76bb05cba97de8e44a4b77eb5c2b6acf, type: 3}
+  pipetteCursor: {fileID: 2800000, guid: 94ebe608e0d8d5449a18349b480d041e, type: 3}
+  scrollMoveCursor: {fileID: 2800000, guid: a9b062971c43b254daf31752c3efecbf, type: 3}
+  scaleUpCursor: {fileID: 2800000, guid: 8aaf5ae13ce7051488c874b8d22e359d, type: 3}
+  scaleDownCursor: {fileID: 2800000, guid: ffc0ddc7658fe3b48b41ec07e6d3c03b, type: 3}
 --- !u!4 &182806290
 Transform:
   m_ObjectHideFlags: 0
@@ -590,7 +601,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 182806289}
         m_TargetAssemblyTypeName: MainScript, Assembly-CSharp
         m_MethodName: EraserButton
         m_Mode: 1
@@ -1681,11 +1692,35 @@ MonoBehaviour:
   - eventID: 0
     callback:
       m_PersistentCalls:
-        m_Calls: []
+        m_Calls:
+        - m_Target: {fileID: 182806289}
+          m_TargetAssemblyTypeName: MainScript, Assembly-CSharp
+          m_MethodName: ShowToolCursor
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
   - eventID: 1
     callback:
       m_PersistentCalls:
-        m_Calls: []
+        m_Calls:
+        - m_Target: {fileID: 182806289}
+          m_TargetAssemblyTypeName: MainScript, Assembly-CSharp
+          m_MethodName: HideToolCursor
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
 --- !u!114 &619533603
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2040,7 +2075,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 182806289}
         m_TargetAssemblyTypeName: MainScript, Assembly-CSharp
         m_MethodName: DisplacerButton
         m_Mode: 1
@@ -2615,6 +2650,34 @@ PrefabInstance:
     - target: {fileID: 3648217157356556974, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
       propertyPath: m_Color.r
       value: 0.654902
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 182806289}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: SaveImage
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: MainScript, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 4156364553206210705, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
       propertyPath: m_Name
@@ -3712,7 +3775,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 182806289}
         m_TargetAssemblyTypeName: MainScript, Assembly-CSharp
         m_MethodName: BrushButton
         m_Mode: 1
@@ -4410,9 +4473,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 182806289}
         m_TargetAssemblyTypeName: MainScript, Assembly-CSharp
-        m_MethodName: DisplacerButton
+        m_MethodName: PipetteButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

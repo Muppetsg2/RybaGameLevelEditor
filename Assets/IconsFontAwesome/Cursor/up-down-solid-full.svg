@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 640 640"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="up-down-solid-full.svg"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   inkscape:export-filename="up-down-solid-full.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.90045629"
+     inkscape:cx="380.91799"
+     inkscape:cy="327.05641"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <!--!Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+  <path
+     id="path1"
+     style="fill:#ffffff;stroke:none"
+     d="M 319.94922 64.025391 C 311.74922 64.025391 303.55078 67.150391 297.30078 73.400391 L 233.30078 137.40039 C 224.10078 146.60039 221.40039 160.30078 226.40039 172.30078 C 231.40039 184.30078 243.1 192 256 192 L 288 192 L 288 205.34961 L 288 288 L 288 352 L 288 437.00586 L 288 448 L 256 448 C 243.1 448 231.40039 455.80078 226.40039 467.80078 C 221.40039 479.80078 224.20078 493.49922 233.30078 502.69922 L 297.30078 566.69922 C 309.80078 579.19922 330.09961 579.19922 342.59961 566.69922 L 406.59961 502.69922 C 415.79961 493.49922 418.5 479.80078 413.5 467.80078 C 408.5 455.80078 396.9 448 384 448 L 352 448 L 352 435.43555 L 352 352 L 352 288 L 352 203.7793 L 352 192 L 384 192 C 396.9 192 408.59961 184.19922 413.59961 172.19922 C 418.59961 160.19922 415.79922 146.50078 406.69922 137.30078 L 342.69922 73.300781 L 342.59961 73.400391 C 336.34961 67.150391 328.14922 64.025391 319.94922 64.025391 z " />
+</svg>
