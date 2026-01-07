@@ -114,9 +114,6 @@ public class MainScript : MonoBehaviour
     [SerializeField] private RawImage gridImage;
     private Texture2D gridTexture = null;
 
-    // Moves History
-    private List<IMove> moves = new();
-
     // Displacer
     private DisplacerData displacerMoveData = new();
 
@@ -157,15 +154,19 @@ public class MainScript : MonoBehaviour
 
             if (Input.GetMouseButtonDown(0))
             {
+                bool colorChanged = false;
+                IMove moveToAdd = null;
                 if (CurrentTool == Tool.Brush)
                 {
-                    moves.Add(new DrawMove(ref drawTexture, TileEncoder.EncodeColor(tileType, tilePower, tileRotation), _pixelPos));
+                    moveToAdd = new DrawMove(ref drawTexture, TileEncoder.EncodeColor(tileType, tilePower, tileRotation), _pixelPos);
+                    colorChanged = true;
                 }
                 else if (CurrentTool == Tool.Eraser)
                 {
                     if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default))
                     {
-                        moves.Add(new EraseMove(ref drawTexture, _pixelPos));
+                        moveToAdd = new EraseMove(ref drawTexture, _pixelPos);
+                        colorChanged = true;
                     }
                 }
                 else if (CurrentTool == Tool.DisplacerTake)
@@ -174,12 +175,14 @@ public class MainScript : MonoBehaviour
                     {
                         _ = new DisplacerTakeMove(ref drawTexture, _pixelPos, out displacerMoveData);
                         CurrentTool = Tool.DisplacerPut;
+                        colorChanged = true;
                     }
                 }
                 else if (CurrentTool == Tool.DisplacerPut)
                 {
-                    moves.Add(new DisplacerPutMove(ref drawTexture, displacerMoveData, _pixelPos));
+                    moveToAdd = new DisplacerPutMove(ref drawTexture, displacerMoveData, _pixelPos);
                     CurrentTool = Tool.DisplacerTake;
+                    colorChanged = true;
                 }
                 else if (CurrentTool == Tool.Pipette)
                 {
@@ -190,6 +193,21 @@ public class MainScript : MonoBehaviour
                         powerInput.SetValue(pipettePower);
                         rotationDropdown.SetOption((uint)pipetteRotation);
                     }
+                }
+
+                if (moveToAdd != null)
+                {
+                    if (actualMoveId + 1 != moves.Count)
+                    {
+                        moves.RemoveRange(actualMoveId, moves.Count - actualMoveId); // Check if range and id is correct
+                    }
+
+                    moves.Add(moveToAdd);
+                }
+
+                if (colorChanged)
+                {
+                    UpdateDrawPointer();
                 }
             }
 
@@ -443,6 +461,22 @@ public class MainScript : MonoBehaviour
         Vector3 mouseDelta = Input.mousePosition - startMousePos;
 
         drawImageRect.transform.localPosition = startImagePos + new Vector3(mouseDelta.x, mouseDelta.y, 0);
+    }
+
+    // Move History
+    [SerializeField] private Button undoButton;
+    [SerializeField] private Button redoButton;
+    private List<IMove> moves = new();
+    private int actualMoveId = 0;
+
+    public void Undo()
+    {
+
+    }
+
+    public void Redo()
+    {
+
     }
 
     // Tools
