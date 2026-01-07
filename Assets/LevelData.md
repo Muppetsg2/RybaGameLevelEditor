@@ -37,12 +37,12 @@ Example color mapping:
 | ID | Meaning        | RGB Color |
 |----|----------------|-----------|
 | 0  | Default Tile   | (0, 0, 0) |
-| 1  | Splitter       | (255, 0, 0) |
-| 2  | Factory        | (0, 255, 0) |
-| 3  | Boiler         | (0, 0, 255) |
-| 4  | Path Straight  | (255, 255, 0) |
-| 5  | Merger         | (255, 0, 255) |
-| 6  | Path Turn      | (0, 255, 255) |
+| 1  | Path Straight  | (255, 255, 0) |
+| 2  | Path Turn      | (0, 255, 255) |
+| 3  | Factory        | (0, 255, 0) |
+| 4  | Boiler         | (0, 0, 255) |
+| 5  | Splitter       | (255, 0, 0) |
+| 6  | Merger         | (255, 0, 255) |
 | 7  | Obstacle       | (255, 255, 255) |
 
 > ⚠️ Colors must be **exact** (no anti-aliasing or lossy compression).
