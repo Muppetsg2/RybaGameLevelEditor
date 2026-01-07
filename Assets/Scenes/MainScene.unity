@@ -476,7 +476,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 182806289}
         m_TargetAssemblyTypeName: MainScript, Assembly-CSharp
-        m_MethodName: BrushButton
+        m_MethodName: Undo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -660,6 +660,8 @@ MonoBehaviour:
   gridImage: {fileID: 1706076710}
   scrollScaleSensitivityPercent: 0.1
   scrollMoveSensitivity: 5
+  undoButton: {fileID: 135082918}
+  redoButton: {fileID: 2041114177}
   brushButton: {fileID: 1161185509}
   eraserButton: {fileID: 185215941}
   displacerButton: {fileID: 711745632}
@@ -9279,7 +9281,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 182806289}
         m_TargetAssemblyTypeName: MainScript, Assembly-CSharp
-        m_MethodName: EraserButton
+        m_MethodName: Redo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

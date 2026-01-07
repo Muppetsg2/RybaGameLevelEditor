@@ -128,6 +128,9 @@ public class MainScript : MonoBehaviour
 
     private void Update()
     {
+        undoButton.interactable = !(actualMoveId == -1);
+        redoButton.interactable = !(movesHistory.Count == 0 || actualMoveId + 1 == movesHistory.Count);
+
         RectTransformUtility.ScreenPointToLocalPointInRectangle(viewRect, Input.mousePosition, Camera.main, out mouseViewPos);
 
         mouseViewPos.x += ViewRectWidth * 0.5f;
@@ -173,13 +176,14 @@ public class MainScript : MonoBehaviour
                 {
                     if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default))
                     {
-                        _ = new DisplacerTakeMove(ref drawTexture, _pixelPos, out displacerMoveData);
+                        moveToAdd = new DisplacerTakeMove(ref drawTexture, _pixelPos, out displacerMoveData);
                         CurrentTool = Tool.DisplacerPut;
                         colorChanged = true;
                     }
                 }
                 else if (CurrentTool == Tool.DisplacerPut)
                 {
+                    --actualMoveId;
                     moveToAdd = new DisplacerPutMove(ref drawTexture, displacerMoveData, _pixelPos);
                     CurrentTool = Tool.DisplacerTake;
                     colorChanged = true;
@@ -197,12 +201,14 @@ public class MainScript : MonoBehaviour
 
                 if (moveToAdd != null)
                 {
-                    if (actualMoveId + 1 != moves.Count)
+                    if (actualMoveId + 1 != movesHistory.Count)
                     {
-                        moves.RemoveRange(actualMoveId, moves.Count - actualMoveId); // Check if range and id is correct
+                        int startId = actualMoveId + 1;
+                        movesHistory.RemoveRange(startId, movesHistory.Count - startId);
                     }
 
-                    moves.Add(moveToAdd);
+                    movesHistory.Add(moveToAdd);
+                    ++actualMoveId;
                 }
 
                 if (colorChanged)
@@ -464,19 +470,26 @@ public class MainScript : MonoBehaviour
     }
 
     // Move History
+    [Header("Move History")]
     [SerializeField] private Button undoButton;
     [SerializeField] private Button redoButton;
-    private List<IMove> moves = new();
-    private int actualMoveId = 0;
+    private List<IMove> movesHistory = new();
+    private int actualMoveId = -1;
 
     public void Undo()
     {
+        if (actualMoveId == -1) return;
 
+        movesHistory[actualMoveId].Undo();
+        --actualMoveId;
     }
 
     public void Redo()
     {
+        if (movesHistory.Count == 0 || actualMoveId + 1 == movesHistory.Count) return;
 
+        ++actualMoveId;
+        movesHistory[actualMoveId].Do();
     }
 
     // Tools
