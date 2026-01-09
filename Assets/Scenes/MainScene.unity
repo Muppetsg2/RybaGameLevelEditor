@@ -684,7 +684,7 @@ MonoBehaviour:
   eraserCursor: {fileID: 2800000, guid: c17b5e2ede4699647ae586f75f06ebc2, type: 3}
   displacerTakeCursor: {fileID: 2800000, guid: 36798c09352a72545803b6794df4dd34, type: 3}
   displacerTakeXMarkCursor: {fileID: 2800000, guid: e4af49703861080449bced891a52471d, type: 3}
-  displacerPutCursor: {fileID: 2800000, guid: 76bb05cba97de8e44a4b77eb5c2b6acf, type: 3}
+  displacerPutCursor: {fileID: 2800000, guid: 86d2b50837c47d54a99e0c7247a342b4, type: 3}
   pipetteCursor: {fileID: 2800000, guid: 94ebe608e0d8d5449a18349b480d041e, type: 3}
   pipetteXMarkCursor: {fileID: 2800000, guid: 431b562ef2241464aaa99c5bdb042fbf, type: 3}
   scrollMoveCursor: {fileID: 2800000, guid: a9b062971c43b254daf31752c3efecbf, type: 3}

@@ -3,8 +3,8 @@
    viewBox="0 0 640 640"
    version="1.1"
    id="svg1"
-   sodipodi:docname="hand-solid-full.svg"
-   inkscape:export-filename="hand-solid-full.png"
+   sodipodi:docname="hand-back-fist-no-sleeve-solid-full.svg"
+   inkscape:export-filename="hand-back-fist-no-sleeve-solid-full.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    inkscape:version="1.4 (86a8ad7, 2024-10-11)"
@@ -24,8 +24,8 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="0.63671875"
-     inkscape:cx="265.42331"
-     inkscape:cy="223.80368"
+     inkscape:cx="332.95706"
+     inkscape:cy="245.79141"
      inkscape:window-width="1920"
      inkscape:window-height="1017"
      inkscape:window-x="-8"
@@ -34,11 +34,11 @@
      inkscape:current-layer="svg1" />
   <!--!Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
   <path
-     d="M352 96C352 78.3 337.7 64 320 64C302.3 64 288 78.3 288 96L288 304C288 312.8 280.8 320 272 320C263.2 320 256 312.8 256 304L256 128C256 110.3 241.7 96 224 96C206.3 96 192 110.3 192 128L192 400C192 401.5 192 403.1 192.1 404.6L131.6 347C115.6 331.8 90.3 332.4 75 348.4C59.7 364.4 60.4 389.7 76.4 405L188.8 512C231.9 553.1 289.2 576 348.8 576L368 576C465.2 576 544 497.2 544 400L544 192C544 174.3 529.7 160 512 160C494.3 160 480 174.3 480 192L480 304C480 312.8 472.8 320 464 320C455.2 320 448 312.8 448 304L448 128C448 110.3 433.7 96 416 96C398.3 96 384 110.3 384 128L384 304C384 312.8 376.8 320 368 320C359.2 320 352 312.8 352 304L352 96z"
-     id="path1"
-     style="fill:#ffffff;stroke:#000000;stroke-opacity:1;stroke-width:25;stroke-dasharray:none" />
-  <path
      d="M 53.75764,32.70944 C 41.76749,33.91369 32.5,44.01892 32.5,56.27086 v 134.0383 c 0,9.634 5.75946,18.22083 14.66044,21.88594 8.90098,3.66511 19.05857,1.67548 25.8652,-5.13116 l 134.0383,-134.0383 c 6.75428,-6.75427 8.79627,-16.96422 5.13115,-25.8652 C 208.52999,38.25946 199.8908,32.55236 190.30916,32.5 H 56.27085 l -2.4085,0.10472 z"
      id="path1-8"
      style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:25;stroke-dasharray:none;stroke-opacity:1" />
+  <path
+     id="path1"
+     style="fill:#ffffff;stroke:#000000;stroke-width:25;stroke-dasharray:none;stroke-opacity:1"
+     d="m 359.41104,200.63804 c -23.3,0 -42.79961,16.70078 -47.09961,38.80078 -8.5,-13.7 -23.60039,-22.80078 -40.90039,-22.80078 -26.5,0 -48,21.5 -48,48 v 80 h -16 c -26.5,0 -48,21.5 -48,48 v 36 c 0,9.1 2.60039,17.89961 7.40039,25.59961 l 48,76 c 8.8,14 24.09961,22.40039 40.59961,22.40039 h 184.40039 c 24.2,0 46.39922,-13.70039 57.19922,-35.40039 l 39.59961,-79.09961 c 4.5,-8.9 6.80078,-18.69961 6.80078,-28.59961 v -96.90039 c 0,-26.5 -21.5,-48 -48,-48 -6.3,0 -12.19922,1.20039 -17.69922,3.40039 -5.5,-20.4 -24.20078,-35.40039 -46.30078,-35.40039 -9.1,0 -17.60039,2.50039 -24.90039,6.90039 -4.2,-22.1 -23.69961,-38.90039 -47.09961,-38.90039 z" />
 </svg>

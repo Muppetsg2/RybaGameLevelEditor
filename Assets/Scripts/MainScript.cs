@@ -807,19 +807,19 @@ public class MainScript : MonoBehaviour
             {
                 // TODO: Poprawic pozycje obrazków oraz pomyœleæ co zrobiæ z kolorami
                 case Tool.Brush:
-                    Cursor.SetCursor(brushCursor, new Vector2(0, 64), CursorMode.Auto);
+                    Cursor.SetCursor(brushCursor, new Vector2(0, 0), CursorMode.Auto);
                     break;
                 case Tool.Eraser:
-                    Cursor.SetCursor(eraserCursor, new Vector2(23, 64), CursorMode.Auto);
+                    Cursor.SetCursor(eraserCursor, new Vector2(0, 0), CursorMode.Auto);
                     break;
                 case Tool.DisplacerTake:
-                    Cursor.SetCursor(IsDefaultTile ? displacerTakeXMarkCursor : displacerTakeCursor, new Vector2(26, 38), CursorMode.Auto);
+                    Cursor.SetCursor(IsDefaultTile ? displacerTakeXMarkCursor : displacerTakeCursor, new Vector2(0, 0), CursorMode.Auto);
                     break;
                 case Tool.DisplacerPut:
-                    Cursor.SetCursor(displacerPutCursor, new Vector2(38, 26), CursorMode.Auto);
+                    Cursor.SetCursor(displacerPutCursor, new Vector2(0, 0), CursorMode.Auto);
                     break;
                 case Tool.Pipette:
-                    Cursor.SetCursor(IsDefaultTile ? pipetteXMarkCursor : pipetteCursor, new Vector2(38, 26), CursorMode.Auto);
+                    Cursor.SetCursor(IsDefaultTile ? pipetteXMarkCursor : pipetteCursor, new Vector2(0, 0), CursorMode.Auto);
                     break;
             }
         }
