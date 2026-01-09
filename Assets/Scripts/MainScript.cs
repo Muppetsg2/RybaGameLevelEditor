@@ -1017,7 +1017,7 @@ public class MainScript : MonoBehaviour
 
     public void SaveImage()
     {
-        string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Image", Application.dataPath, "LevelMap", new ExtensionFilter[] { new("QOI ", new string[] { "qoi" }), new("PNG ", new string[] { "png" }) });
+        string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Image", Application.dataPath, "LevelMap", new ExtensionFilter[] { new("QOI", new string[] { "qoi" }), new("PNG", new string[] { "png" }) });
 
         if (string.IsNullOrEmpty(filePath)) return;
 
@@ -1097,7 +1097,7 @@ public class MainScript : MonoBehaviour
 
     public void LoadProject(bool start)
     {
-        string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Level Map Project", Application.dataPath, new ExtensionFilter[] { new ExtensionFilter("Level Project ", new string[] { "lep" }) }, false);
+        string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Level Map Project", Application.dataPath, new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) }, false);
         if (filePaths.Length != 0 && !string.IsNullOrEmpty(filePaths[0]))
         {
             ProjectData data = FileWriter.ReadFromBinaryFile<ProjectData>(filePaths[0]);
@@ -1107,10 +1107,19 @@ public class MainScript : MonoBehaviour
             Debug.Log("Editor Version: " + data.editorVersion);
             Debug.Log("Format Version: " + data.formatVersion);
 
+            if (ProjectFileFormatConst.CompareWithMagicChars(data.magic))
+            {
+                Debug.Log("The selected file is not a valid Level Project file. (Magic chars not equals)");
+                if (start) onLoadProjectFailed?.Invoke();
+                ShowLoadProjectErrorMessage("The selected file is not a valid Level Project file.");
+                return;
+            }
+
             if (data.formatVersion > ProjectFileFormatConst.GetProjectFileFormatVersion())
             {
-                Debug.Log("Newer Version of Project File not supported!");
+                Debug.Log("This project file uses a newer file format version that is not supported.");
                 if (start) onLoadProjectFailed?.Invoke();
+                ShowLoadProjectErrorMessage("This project file uses a newer file format version that is not supported.");
                 return;
             }
 
@@ -1125,17 +1134,26 @@ public class MainScript : MonoBehaviour
         }
         else
         {
-            Debug.Log("No files loaded");
+            Debug.Log("No project file was selected.");
             if (start) onLoadProjectFailed?.Invoke();
+            ShowLoadProjectErrorMessage("No project file was selected.");
             return;
         }
+    }
+
+    private void ShowLoadProjectErrorMessage(string error)
+    {
+        messageBox.ShowDialog("Load Project Error",
+                "The project could not be loaded.\n\n" + "Reason:\n" + error,
+                "OK", x => {}
+        );
     }
 
     public void SaveProject()
     {
         if (isLevelCreated)
         {
-            string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Project", Application.dataPath, "Project", new ExtensionFilter[] { new ExtensionFilter("Level Project ", new string[] { "lep" }) });
+            string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Project", Application.dataPath, "Project", new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) });
             if (!string.IsNullOrEmpty(filePath))
             {
                 List<TileData> ModifiedTiles = new();
@@ -1164,6 +1182,7 @@ public class MainScript : MonoBehaviour
 
                 ProjectData data = new()
                 {
+                    magic = ProjectFileFormatConst.GetProjectFileFormatMagicChars(),
                     fileName = Path.GetFileNameWithoutExtension(filePath),
                     date = DateTime.Now,
                     editorVersion = Application.version,
