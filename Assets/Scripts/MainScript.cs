@@ -123,6 +123,7 @@ public class MainScript : MonoBehaviour
     private List<EraseData> erases = new();
 
     // Displacer
+    private DisplacerTakeMove displacerTake = null;
     private DisplacerData displacerMoveData = new();
 
     // Window Block
@@ -171,14 +172,14 @@ public class MainScript : MonoBehaviour
                 {
                     if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default))
                     {
-                        moveToAdd = new DisplacerTakeMove(ref drawTexture, _pixelPos, out displacerMoveData);
+                        displacerTake = new DisplacerTakeMove(ref drawTexture, _pixelPos, out displacerMoveData);
                         CurrentTool = Tool.DisplacerPut;
                         colorChanged = true;
                     }
                 }
                 else if (CurrentTool == Tool.DisplacerPut)
                 {
-                    --actualMoveId;
+                    displacerTake = null;
                     moveToAdd = new DisplacerPutMove(ref drawTexture, displacerMoveData, _pixelPos);
                     CurrentTool = Tool.DisplacerTake;
                     colorChanged = true;
@@ -535,6 +536,8 @@ public class MainScript : MonoBehaviour
     {
         if (actualMoveId == -1) return;
 
+        if (CheckDisplacerTakeUndoRedo(true)) return;
+
         movesHistory[actualMoveId].Undo();
         --actualMoveId;
     }
@@ -543,8 +546,55 @@ public class MainScript : MonoBehaviour
     {
         if (movesHistory.Count == 0 || actualMoveId + 1 == movesHistory.Count) return;
 
+        if (CheckDisplacerTakeUndoRedo(false)) return;
+
         ++actualMoveId;
         movesHistory[actualMoveId].Do();
+    }
+
+    private bool CheckDisplacerTakeUndoRedo(bool undo)
+    {
+        if (messageBox == null || displacerTake == null)
+        {
+            return false;
+        }
+
+        messageBox.ShowDialog("Displacer",
+                "You are currently in displacer put mode.\n" +
+                "If you undo now your changes will be lost and can't be redo.\n" +
+                "Are you sure you want to continue?",
+                "No", "Yes", x =>
+                {
+                    switch (x)
+                    {
+                        case NativeDialogs.Runtime.DialogResult.Confirm:
+                            {
+                                displacerTake.Undo();
+                                displacerTake = null;
+                                CurrentTool = Tool.DisplacerTake;
+
+                                if (undo)
+                                {
+                                    movesHistory[actualMoveId].Undo();
+                                    --actualMoveId;
+                                }
+                                else
+                                {
+                                    ++actualMoveId;
+                                    movesHistory[actualMoveId].Do();
+                                }
+
+                                break;
+                            }
+                        case NativeDialogs.Runtime.DialogResult.Cancel:
+                            {
+                                break;
+                            }
+                    }
+                }
+            );
+
+        return true;
     }
 
     // Tools
@@ -594,13 +644,11 @@ public class MainScript : MonoBehaviour
 
     void ChangeTool(Action action, bool undoDisplacerTake)
     {
-        /*
-        if (undoDisplacerSelect)
+        if (undoDisplacerTake)
         {
-            CheckDisplacerSelect(action, removeUnfinished);
+            CheckDisplacerTakeChangeTool(action);
             return;
         }
-        */
 
         FinalChangeTool(action);
     }
@@ -677,49 +725,38 @@ public class MainScript : MonoBehaviour
         }, undoDisplacerTake);
     }
 
-    /*
-    void CheckDisplacerSelect(Action action, bool removeUnfinished)
+    void CheckDisplacerTakeChangeTool(Action action)
     {
-        if (moves.Count != 0 && moves[^1].GetType().IsAssignableFrom(typeof(DisplacerSelectMove)))
+        if (messageBox == null || displacerTake == null)
         {
-            isInteractionBlocked = true;
-            PopupSystem.CreateWindow("Displacer",
-                "You are currently in displacer draw mode.\n" + 
-                "If you change tool now your changes will be lost.\n" + 
-                "Are you sure you want to do this?",
-                "Yes", () =>
+            FinalChangeTool(action);
+            return;
+        }
+
+        messageBox.ShowDialog("Displacer",
+                "You are currently in displacer put mode.\n" +
+                "If you change tool now your changes will be lost.\n" +
+                "Are you sure you want to change tool?",
+                "No", "Yes", x =>
                 {
-                    isInteractionBlocked = false;
-
-                    IMove move = moves[^1];
-                    moves.RemoveAt(moves.Count - 1);
-                    move.Undo();
-
-                    if (removeUnfinished)
+                    switch (x)
                     {
-                        CheckUnfinishedGroup(action);
-                        return;
+                        case NativeDialogs.Runtime.DialogResult.Confirm:
+                            {
+                                displacerTake.Undo();
+                                displacerTake = null;
+
+                                FinalChangeTool(action);
+                                break;
+                            }
+                        case NativeDialogs.Runtime.DialogResult.Cancel:
+                            {
+                                break;
+                            }
                     }
-
-                    FinalChangeTool(action);
-                },
-                "No", () => 
-                {
-                    isInteractionBlocked = false;
-                });
-
-            return;
-        }
-
-        if (removeUnfinished)
-        {
-            CheckUnfinishedGroup(action);
-            return;
-        }
-
-        FinalChangeTool(action);
+                }
+            );
     }
-    */
 
     // Cursor
     [Header("Cursor")]
@@ -977,8 +1014,7 @@ public class MainScript : MonoBehaviour
     {
         string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Image", Application.dataPath, "LevelMap", new ExtensionFilter[] { new("QOI ", new string[] { "qoi" }), new("PNG ", new string[] { "png" }) });
 
-        if (string.IsNullOrEmpty(filePath))
-            return;
+        if (string.IsNullOrEmpty(filePath)) return;
 
         string extension = Path.GetExtension(filePath).ToLowerInvariant();
 
@@ -1004,13 +1040,17 @@ public class MainScript : MonoBehaviour
 
     // Project
     [Header("Project")]
+    [SerializeField] private NativeDialogs.Runtime.NativeDialogComponent messageBox;
     public UnityEvent onLoadProjectFailed;
-    /*
+
     public void NewProject()
     {
         // TODO: Open Window with defining new project image size and with cancel button oraz create button
+        if (messageBox != null)
+        {
+            messageBox.ShowDialog("I Like You", "You have a problem!", "No", "Yes", x => { Debug.Log(x.ToString()); });
+        }
     }
-    */
 
     public void LoadProject(bool start)
     {

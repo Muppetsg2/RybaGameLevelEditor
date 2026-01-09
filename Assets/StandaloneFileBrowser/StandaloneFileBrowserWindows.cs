@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
-using Ookii.Dialogs;
+using Ookii.Dialogs.WinForms;
 
 namespace SFB {
     // For fullscreen support
@@ -52,7 +52,7 @@ namespace SFB {
                 fd.SelectedPath = GetDirectoryPath(directory);
             }
             var res = fd.ShowDialog(new WindowWrapper(GetActiveWindow()));
-            var filenames = res == DialogResult.OK ? new []{ fd.SelectedPath } : new string[0];
+            var filenames = res == DialogResult.OK ? new[] { fd.SelectedPath } : new string[0];
             fd.Dispose();
             return filenames;
         }
@@ -100,9 +100,10 @@ namespace SFB {
         // .NET Framework FileDialog Filter format
         // https://msdn.microsoft.com/en-us/library/microsoft.win32.filedialog.filter
         private static string GetFilterFromFileExtensionList(ExtensionFilter[] extensions) {
+            if (extensions == null) return string.Empty;
             var filterString = "";
             foreach (var filter in extensions) {
-                filterString += filter.Name + "(";
+                filterString += filter.Name + " (";
 
                 foreach (var ext in filter.Extensions) {
                     filterString += "*." + ext + ",";
