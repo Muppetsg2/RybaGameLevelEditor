@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using NativeDialogs.Runtime;
 
 public enum Tool { Brush, Eraser, DisplacerTake, DisplacerPut, Pipette };
 
@@ -133,6 +134,12 @@ public class MainScript : MonoBehaviour
     {
         drawImageRect = drawImage.GetComponent<RectTransform>();
         DefaultCursor();
+
+        if (newProjectWindow != null)
+        {
+            newProjectWindow.onCreate.AddListener(OnNewProjectCreate);
+            newProjectWindow.onCancel.AddListener(OnNewProjectCancel);
+        }
     }
 
     private void Update()
@@ -344,7 +351,7 @@ public class MainScript : MonoBehaviour
     }
 
     // Default Options
-    void ResetSettings()
+    private void ResetSettings()
     {
         cleared = false;
 
@@ -380,7 +387,6 @@ public class MainScript : MonoBehaviour
 
     // Mouse Image UV Pos == scalePivotPos
     private Vector2 scalePivotPos = Vector2.one;
-
     private bool isScaling = false;
     private bool IsScaling
     {
@@ -411,7 +417,6 @@ public class MainScript : MonoBehaviour
             }
         }
     }
-
     private bool lastUp = true;
     bool LastUp
     {
@@ -429,7 +434,7 @@ public class MainScript : MonoBehaviour
         }
     }
 
-    float GetDefaultScale()
+    private float GetDefaultScale()
     {
         float scaleX = ViewRectWidth / DrawImageRectWidth;
         float scaleY = ViewRectHeight / DrawImageRectHeight;
@@ -437,7 +442,7 @@ public class MainScript : MonoBehaviour
         return Mathf.Clamp(computedScale, minScale, maxScale);
     }
 
-    float GetMinScale()
+    private float GetMinScale()
     {
         float scaleX = 2f / DrawImageRectWidth;
         float scaleY = 2f / DrawImageRectHeight;
@@ -445,7 +450,7 @@ public class MainScript : MonoBehaviour
         return computedScale;
     }
 
-    float GetMaxScale()
+    private float GetMaxScale()
     {
         float scaleX = ViewRectWidth * 0.5f; // ViewRectWidth / 2f
         float scaleY = ViewRectHeight * 0.5f; // ViewRectHeight / 2f
@@ -453,7 +458,7 @@ public class MainScript : MonoBehaviour
         return computedScale;
     }
 
-    void Scale()
+    private void Scale()
     {
         float oldScale = currentScale;
         currentScale += scrollScaleSensitivityPercent * currentScale * Input.mouseScrollDelta.y;
@@ -488,7 +493,7 @@ public class MainScript : MonoBehaviour
     private Vector3 startMousePos = Vector3.zero;
     bool scrollMoveEnabled = false;
 
-    void Move()
+    private void Move()
     {
         Vector3 currentMove = Vector3.zero;
 
@@ -504,7 +509,7 @@ public class MainScript : MonoBehaviour
         drawImageRect.transform.localPosition = drawImageRect.transform.localPosition + currentMove;
     }
 
-    void ScrollButtonMove()
+    private void ScrollButtonMove()
     {
         Vector3 mouseDelta = Input.mousePosition - startMousePos;
 
@@ -560,14 +565,14 @@ public class MainScript : MonoBehaviour
         }
 
         messageBox.ShowDialog("Displacer",
-                "You are currently in displacer put mode.\n" +
-                "If you undo now your changes will be lost and can't be redo.\n" +
+                "You are currently in Displacer placement mode.\n" +
+                "If you undo now, your changes will be lost and cannot be redone.\n\n" +
                 "Are you sure you want to continue?",
                 "No", "Yes", x =>
                 {
                     switch (x)
                     {
-                        case NativeDialogs.Runtime.DialogResult.Confirm:
+                        case DialogResult.Confirm:
                             {
                                 displacerTake.Undo();
                                 displacerTake = null;
@@ -586,7 +591,7 @@ public class MainScript : MonoBehaviour
 
                                 break;
                             }
-                        case NativeDialogs.Runtime.DialogResult.Cancel:
+                        case DialogResult.Cancel:
                             {
                                 break;
                             }
@@ -620,7 +625,7 @@ public class MainScript : MonoBehaviour
         }
     }
 
-    void FinalChangeTool(Action action)
+    private void FinalChangeTool(Action action)
     {
         switch (CurrentTool)
         {
@@ -642,7 +647,7 @@ public class MainScript : MonoBehaviour
         action.Invoke();
     }
 
-    void ChangeTool(Action action, bool undoDisplacerTake)
+    private void ChangeTool(Action action, bool undoDisplacerTake)
     {
         if (undoDisplacerTake)
         {
@@ -662,7 +667,7 @@ public class MainScript : MonoBehaviour
         ChangeToBrush(true);
     }
 
-    void ChangeToBrush(bool undoDisplacerTake)
+    private void ChangeToBrush(bool undoDisplacerTake)
     {
         ChangeTool(() =>
         {
@@ -680,7 +685,7 @@ public class MainScript : MonoBehaviour
         ChangeToEraser(true);
     }
 
-    void ChangeToEraser(bool undoDisplacerTake)
+    private void ChangeToEraser(bool undoDisplacerTake)
     {
         ChangeTool(() =>
         {
@@ -698,7 +703,7 @@ public class MainScript : MonoBehaviour
         ChangeToDisplacer(true);
     }
 
-    void ChangeToDisplacer(bool undoDisplacerTake)
+    private void ChangeToDisplacer(bool undoDisplacerTake)
     {
         ChangeTool(() =>
         {
@@ -716,7 +721,7 @@ public class MainScript : MonoBehaviour
         ChangeToPipette(true);
     }
 
-    void ChangeToPipette(bool undoDisplacerTake)
+    private void ChangeToPipette(bool undoDisplacerTake)
     {
         ChangeTool(() =>
         {
@@ -725,7 +730,7 @@ public class MainScript : MonoBehaviour
         }, undoDisplacerTake);
     }
 
-    void CheckDisplacerTakeChangeTool(Action action)
+    private void CheckDisplacerTakeChangeTool(Action action)
     {
         if (messageBox == null || displacerTake == null)
         {
@@ -734,14 +739,14 @@ public class MainScript : MonoBehaviour
         }
 
         messageBox.ShowDialog("Displacer",
-                "You are currently in displacer put mode.\n" +
-                "If you change tool now your changes will be lost.\n" +
-                "Are you sure you want to change tool?",
+                "You are in Displacer placement mode.\n" +
+                "Changing the tool will discard your changes.\n\n" +
+                "Are you sure you want to change the tool?",
                 "No", "Yes", x =>
                 {
                     switch (x)
                     {
-                        case NativeDialogs.Runtime.DialogResult.Confirm:
+                        case DialogResult.Confirm:
                             {
                                 displacerTake.Undo();
                                 displacerTake = null;
@@ -749,7 +754,7 @@ public class MainScript : MonoBehaviour
                                 FinalChangeTool(action);
                                 break;
                             }
-                        case NativeDialogs.Runtime.DialogResult.Cancel:
+                        case DialogResult.Cancel:
                             {
                                 break;
                             }
@@ -789,12 +794,12 @@ public class MainScript : MonoBehaviour
         }
     }
 
-    void DefaultCursor()
+    private void DefaultCursor()
     {
         Cursor.SetCursor(defaultCursor, Vector2.zero, CursorMode.Auto);
     }
 
-    void ToolCursor()
+    private void ToolCursor()
     {
         if (isCursorInView)
         {
@@ -820,7 +825,7 @@ public class MainScript : MonoBehaviour
         }
     }
 
-    void ScaleCursor()
+    private void ScaleCursor()
     {
         if (isCursorInView)
         {
@@ -835,7 +840,7 @@ public class MainScript : MonoBehaviour
         }
     }
 
-    void ScrollMoveCursor()
+    private void ScrollMoveCursor()
     {
         if (isCursorInView)
         {
@@ -951,7 +956,7 @@ public class MainScript : MonoBehaviour
     }
 
     // Grid
-    void GenerateGrid(int mapWidth, int mapHeight)
+    private void GenerateGrid(int mapWidth, int mapHeight)
     {
         gridTexture = new(mapWidth * (gridPixelsPerPixelWidth + 1) + 1, mapHeight * (gridPixelsPerPixelHeight + 1) + 1)
         {
@@ -986,19 +991,19 @@ public class MainScript : MonoBehaviour
     private Color currentPointerColor = new();
     private bool cleared = false;
 
-    float GetLuminance(Color color)
+    private float GetLuminance(Color color)
     {
         return 0.2126f * color.linear.r + 0.7152f * color.linear.g + 0.0722f * color.linear.b;
     }
 
-    void ClearDrawPointer()
+    private void ClearDrawPointer()
     {
         cleared = true;
         pointerIndicatorTexture.SetPixel(PixelPosX, PixelPosY, pointerIndicatorTexColor);
         pointerIndicatorTexture.Apply();
     }
 
-    void UpdateDrawPointer()
+    private void UpdateDrawPointer()
     {
         if (cleared) return;
         pointerIndicatorTexture.SetPixel(lastPointerPos.x, lastPointerPos.y, pointerIndicatorTexColor);
@@ -1040,16 +1045,54 @@ public class MainScript : MonoBehaviour
 
     // Project
     [Header("Project")]
-    [SerializeField] private NativeDialogs.Runtime.NativeDialogComponent messageBox;
+    [SerializeField] private NativeDialogComponent messageBox;
+    [SerializeField] private NewProjectWindow newProjectWindow;
     public UnityEvent onLoadProjectFailed;
 
     public void NewProject()
     {
-        // TODO: Open Window with defining new project image size and with cancel button oraz create button
-        if (messageBox != null)
+        if (newProjectWindow == null)
         {
-            messageBox.ShowDialog("I Like You", "You have a problem!", "No", "Yes", x => { Debug.Log(x.ToString()); });
+            Debug.Log("New Project Window not found!");
+            return;
         }
+
+        isInteractionBlocked = true;
+        newProjectWindow.OpenWindow();
+    }
+
+    private void OnNewProjectCreate(uint width, uint height)
+    {
+        if (messageBox == null) return;
+
+        messageBox.ShowDialog("New Project",
+                "You are about to create a new project.\n" +
+                "Any unsaved changes will be lost.\n\n" +
+                "Do you want to continue?",
+                "No", "Yes", x =>
+                {
+                    switch (x)
+                    {
+                        case DialogResult.Confirm:
+                            {
+                                CreateLevelTexture(width, height);
+                                newProjectWindow.CloseWindow();
+                                isInteractionBlocked = false;
+                                break;
+                            }
+                        case DialogResult.Cancel:
+                            {
+                                break;
+                            }
+                    }
+                }
+            );
+    }
+
+    private void OnNewProjectCancel()
+    {
+        newProjectWindow.CloseWindow();
+        isInteractionBlocked = false;
     }
 
     public void LoadProject(bool start)
@@ -1132,5 +1175,36 @@ public class MainScript : MonoBehaviour
                 FileWriter.WriteToBinaryFile(filePath, data, false);
             }
         }
+    }
+
+    // Application
+    public void CloseEditor()
+    {
+        if (messageBox == null)
+        {
+            Application.Quit();
+            return;
+        }
+
+        messageBox.ShowDialog("Exit Editor",
+                "You are about to close the editor.\n" +
+                "Any unsaved changes will be lost.\n\n" +
+                "Do you want to exit?",
+                "Stay", "Exit", x =>
+                {
+                    switch (x)
+                    {
+                        case DialogResult.Confirm:
+                            {
+                                Application.Quit();
+                                break;
+                            }
+                        case DialogResult.Cancel:
+                            {
+                                break;
+                            }
+                    }
+                }
+            );
     }
 }

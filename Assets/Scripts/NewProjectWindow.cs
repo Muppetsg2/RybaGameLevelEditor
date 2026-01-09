@@ -1,10 +1,10 @@
-using UnityEngine;
-using System.Collections.Generic;
 using System;
-using UnityEngine.UI;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
-public class StartMenuManager : MonoBehaviour
+public class NewProjectWindow : MonoBehaviour
 {
     [Serializable]
     struct Preset
@@ -24,16 +24,13 @@ public class StartMenuManager : MonoBehaviour
     private NumberInput heightInput;
 
     [SerializeField]
-    private Button newProjectBtn;
+    private Button createBtn;
 
     [SerializeField]
-    private Button loadProjectBtn;
+    private Button cancelBtn;
 
     [SerializeField]
-    private Canvas startMenuCanvas;
-
-    [SerializeField]
-    private Canvas editorCanvas;
+    private GameObject window;
 
     [SerializeField]
     private uint defaultPreset = 0;
@@ -41,8 +38,8 @@ public class StartMenuManager : MonoBehaviour
     [SerializeField]
     private List<Preset> presets;
 
-    public UnityEvent onLoadProject;
-    public UnityEvent<uint, uint> onNewProject;
+    public UnityEvent<uint, uint> onCreate;
+    public UnityEvent onCancel;
 
     private int dropdownValueUpdateCounter = 2;
 
@@ -78,11 +75,11 @@ public class StartMenuManager : MonoBehaviour
             {
                 if (!emptyValue && heightInput.HasValue())
                 {
-                    if (newProjectBtn != null) newProjectBtn.interactable = true;
+                    if (createBtn != null) createBtn.interactable = true;
                 }
                 else
                 {
-                    if (newProjectBtn != null) newProjectBtn.interactable = false;
+                    if (createBtn != null) createBtn.interactable = false;
                 }
 
                 if (dropdownValueUpdateCounter != 0)
@@ -102,11 +99,11 @@ public class StartMenuManager : MonoBehaviour
             {
                 if (!emptyValue && widthInput.HasValue())
                 {
-                    if (newProjectBtn != null) newProjectBtn.interactable = true;
+                    if (createBtn != null) createBtn.interactable = true;
                 }
                 else
                 {
-                    if (newProjectBtn != null) newProjectBtn.interactable = false;
+                    if (createBtn != null) createBtn.interactable = false;
                 }
 
                 if (dropdownValueUpdateCounter != 0)
@@ -114,50 +111,46 @@ public class StartMenuManager : MonoBehaviour
                     --dropdownValueUpdateCounter;
                     return;
                 }
-                
+
                 presetDropdown.SetOption((uint)(presetDropdown.OptionsCount - 1));
             });
         }
 
-        if (newProjectBtn != null)
+        if (createBtn != null)
         {
-            newProjectBtn.onClick.AddListener(NewProjectEditor);
+            createBtn.onClick.AddListener(Create);
         }
 
-        if (loadProjectBtn != null)
+        if (cancelBtn != null)
         {
-            loadProjectBtn.onClick.AddListener(LoadProjectEditor);
+            cancelBtn.onClick.AddListener(Cancel);
         }
     }
 
     void Start()
     {
-        CloseEditor();
+        CloseWindow();
     }
 
-    public void NewProjectEditor()
+    private void Create()
     {
         uint width = widthInput != null ? (uint)widthInput.GetValue() : 1;
         uint height = heightInput != null ? (uint)heightInput.GetValue() : 1;
-        OpenEditor();
-        onNewProject?.Invoke(width, height);
+        onCreate?.Invoke(width, height);
     }
 
-    public void LoadProjectEditor()
+    private void Cancel()
     {
-        OpenEditor();
-        onLoadProject?.Invoke();
+        onCancel?.Invoke();
     }
 
-    public void OpenEditor()
+    public void OpenWindow()
     {
-        if (startMenuCanvas != null) startMenuCanvas.gameObject.SetActive(false);
-        if (editorCanvas != null) editorCanvas.gameObject.SetActive(true);
+        if (window != null) window.SetActive(true);
     }
 
-    public void CloseEditor()
+    public void CloseWindow()
     {
-        if (editorCanvas != null) editorCanvas.gameObject.SetActive(false);
-        if (startMenuCanvas != null) startMenuCanvas.gameObject.SetActive(true);
+        if (window != null) window.SetActive(false);
     }
 }
