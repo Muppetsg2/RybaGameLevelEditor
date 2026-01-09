@@ -8,10 +8,18 @@ public struct TileData
     public int y;
 
     // Color
-    public int r;
-    public int g;
-    public int b;
-    public int a;
+    public byte r;
+    public byte g;
+    public byte b;
+    public byte a;
+}
+
+public class ProjectFileFormatConst
+{
+    public static int GetProjectFileFormatVersion()
+    {
+        return 1;
+    }
 }
 
 [Serializable]
@@ -21,7 +29,7 @@ public struct ProjectData
     public string fileName; // File Name
     public DateTime date;
     public string editorVersion;
-    public const string formatVersion = "1.0";
+    public int formatVersion;
 
     // Texture Data
     public uint width;

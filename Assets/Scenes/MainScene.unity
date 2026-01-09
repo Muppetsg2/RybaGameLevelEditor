@@ -685,6 +685,21 @@ MonoBehaviour:
   TypeText: {fileID: 188233188}
   PowerText: {fileID: 633830630}
   RotationText: {fileID: 1511175998}
+  onLoadProjectFailed:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 182806291}
+        m_TargetAssemblyTypeName: StartMenuManager, Assembly-CSharp
+        m_MethodName: CloseEditor
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &182806290
 Transform:
   m_ObjectHideFlags: 0
@@ -735,7 +750,19 @@ MonoBehaviour:
     height: 15
   onLoadProject:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 182806289}
+        m_TargetAssemblyTypeName: MainScript, Assembly-CSharp
+        m_MethodName: LoadProject
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
   onNewProject:
     m_PersistentCalls:
       m_Calls:
@@ -3695,6 +3722,34 @@ PrefabInstance:
     - target: {fileID: 1609949579786047128, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
       propertyPath: m_fontSizeMin
       value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 182806289}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: LoadProject
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: MainScript, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 4156364553206210705, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
       propertyPath: m_Name
@@ -7011,6 +7066,34 @@ PrefabInstance:
     - target: {fileID: 1609949579786047128, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
       propertyPath: m_fontSizeMin
       value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 182806289}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: SaveProject
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: MainScript, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 4156364553206210705, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
       propertyPath: m_Name

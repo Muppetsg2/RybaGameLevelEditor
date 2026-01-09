@@ -2,9 +2,9 @@ using SFB;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public enum Tool { Brush, Eraser, DisplacerTake, DisplacerPut, Pipette };
@@ -79,8 +79,9 @@ public class MainScript : MonoBehaviour
         }
         set
         {
-            if (_pixelPos.x != value)
+            if (_pixelPos.x != value || cleared)
             {
+                cleared = false;
                 _pixelPos.x = value;
                 UpdateDrawPointer();
             }
@@ -94,8 +95,9 @@ public class MainScript : MonoBehaviour
         }
         set
         {
-            if (_pixelPos.y != value)
+            if (_pixelPos.y != value || cleared)
             {
+                cleared = false;
                 _pixelPos.y = value;
                 UpdateDrawPointer();
             }
@@ -113,6 +115,12 @@ public class MainScript : MonoBehaviour
     [SerializeField] private int gridPixelsPerPixelHeight = 25;
     [SerializeField] private RawImage gridImage;
     private Texture2D gridTexture = null;
+
+    // Multiple Draws
+    private List<DrawData> draws = new();
+
+    // Multiple Erases
+    private List<EraseData> erases = new();
 
     // Displacer
     private DisplacerData displacerMoveData = new();
@@ -159,20 +167,7 @@ public class MainScript : MonoBehaviour
             {
                 bool colorChanged = false;
                 IMove moveToAdd = null;
-                if (CurrentTool == Tool.Brush)
-                {
-                    moveToAdd = new DrawMove(ref drawTexture, TileEncoder.EncodeColor(tileType, tilePower, tileRotation), _pixelPos);
-                    colorChanged = true;
-                }
-                else if (CurrentTool == Tool.Eraser)
-                {
-                    if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default))
-                    {
-                        moveToAdd = new EraseMove(ref drawTexture, _pixelPos);
-                        colorChanged = true;
-                    }
-                }
-                else if (CurrentTool == Tool.DisplacerTake)
+                if (CurrentTool == Tool.DisplacerTake)
                 {
                     if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default))
                     {
@@ -199,22 +194,48 @@ public class MainScript : MonoBehaviour
                     }
                 }
 
-                if (moveToAdd != null)
-                {
-                    if (actualMoveId + 1 != movesHistory.Count)
-                    {
-                        int startId = actualMoveId + 1;
-                        movesHistory.RemoveRange(startId, movesHistory.Count - startId);
-                    }
-
-                    movesHistory.Add(moveToAdd);
-                    ++actualMoveId;
-                }
+                AddMoveToHistory(moveToAdd);
 
                 if (colorChanged)
                 {
                     UpdateDrawPointer();
                 }
+            }
+
+            if (Input.GetMouseButton(0))
+            {
+                if (CurrentTool == Tool.Brush)
+                {
+                    if (!draws.Exists(d => d.Pos == _pixelPos))
+                    {
+                        DrawData data = new()
+                        {
+                            Pos = _pixelPos,
+                            OldColor = drawTexture.GetPixel(_pixelPos.x, _pixelPos.y),
+                            NewColor = TileEncoder.EncodeColor(tileType, tilePower, tileRotation)
+                        };
+
+                        draws.Add(data);
+                        _ = new DrawMove(ref drawTexture, data);
+                    }
+                }
+                else if (CurrentTool == Tool.Eraser)
+                {
+                    if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default) && !erases.Exists(d => d.Pos == _pixelPos))
+                    {
+                        EraseData data = new()
+                        {
+                            Pos = _pixelPos,
+                            RemovedColor = drawTexture.GetPixel(_pixelPos.x, _pixelPos.y),
+                            BackgroundColor = TileTypeColorMap.GetColor(TileType.Default)
+                        };
+
+                        erases.Add(data);
+                        _ = new EraseMove(ref drawTexture, data);
+                    }
+                }
+
+                UpdateDrawPointer();
             }
 
             if (Input.mouseScrollDelta.y != 0f)
@@ -245,6 +266,11 @@ public class MainScript : MonoBehaviour
         }
         else
         {
+            if (pointerIndicatorTexture)
+            {
+                ClearDrawPointer();
+            }
+
             if (IsScaling)
             {
                 IsScaling = false;
@@ -256,11 +282,51 @@ public class MainScript : MonoBehaviour
             }
         }
 
+        if (isLevelCreated && !isInteractionBlocked && Input.GetMouseButtonUp(0))
+        {
+            IMove moveToAdd = null;
+            if (CurrentTool == Tool.Brush)
+            {
+                if (draws.Count != 0)
+                {
+                    if (draws.Count == 1)
+                    {
+                        moveToAdd = new DrawMove(ref drawTexture, draws[0]);
+                    }
+                    else if (draws.Count > 1)
+                    {
+                        moveToAdd = new MultipleDrawMove(ref drawTexture, draws);
+                    }
+
+                    draws.Clear();
+                }
+            }
+            else if (CurrentTool == Tool.Eraser)
+            {
+                if (erases.Count != 0)
+                {
+                    if (erases.Count == 1)
+                    {
+                        moveToAdd = new EraseMove(ref drawTexture, erases[0]);
+                    }
+                    else if (erases.Count > 1)
+                    {
+                        moveToAdd = new MultipleEraseMove(ref drawTexture, erases);
+                    }
+
+                    erases.Clear();
+                }
+            }
+
+            AddMoveToHistory(moveToAdd);
+            UpdateDrawPointer();
+        }
+
         if (Input.GetMouseButtonUp(2))
         {
             scrollMoveEnabled = false;
 
-            if (isCursorInView)
+            if (isCursorInView && !isInteractionBlocked)
             {
                 ToolCursor();
             }
@@ -269,33 +335,6 @@ public class MainScript : MonoBehaviour
                 DefaultCursor();
             }
         }
-
-        /*
-        if (Input.GetMouseButtonDown(1) && moves.Count != 0)
-        {
-            IMove lastMove = moves[^1];
-            moves.Remove(lastMove);
-            lastMove.Undo();
-
-            var moveType = lastMove.GetType();
-            if (moveType.IsAssignableFrom(typeof(DrawMove)) || moveType.IsAssignableFrom(typeof(VertexGroupCreationMove)))
-            {
-                ChangeToBrush(false, false);
-            }
-            else if (moveType.IsAssignableFrom(typeof(EraseMove)) || moveType.IsAssignableFrom(typeof(DisplacerSelectMove)))
-            {
-                if (CurrentTool == Tool.DisplacerBrush)
-                {
-                    CurrentTool = Tool.DisplacerEraser;
-                }
-            }
-            else if (moveType.IsAssignableFrom(typeof(DisplacerDrawMove)))
-            {
-                ChangeToDisplacer(false, false);
-                CurrentTool = Tool.DisplacerBrush;
-            }
-        }
-        */
 
         if (IsScaling && Input.GetKeyUp(KeyCode.LeftControl))
         {
@@ -306,6 +345,8 @@ public class MainScript : MonoBehaviour
     // Default Options
     void ResetSettings()
     {
+        cleared = false;
+
         lastPointerPos.x = 0;
         lastPointerPos.y = 0;
 
@@ -475,6 +516,20 @@ public class MainScript : MonoBehaviour
     [SerializeField] private Button redoButton;
     private List<IMove> movesHistory = new();
     private int actualMoveId = -1;
+
+    private void AddMoveToHistory(IMove moveToAdd)
+    {
+        if (moveToAdd == null) return;
+
+        if (actualMoveId + 1 != movesHistory.Count)
+        {
+            int startId = actualMoveId + 1;
+            movesHistory.RemoveRange(startId, movesHistory.Count - startId);
+        }
+
+        movesHistory.Add(moveToAdd);
+        ++actualMoveId;
+    }
 
     public void Undo()
     {
@@ -892,13 +947,23 @@ public class MainScript : MonoBehaviour
     // Pointer Values
     private Vector2Int lastPointerPos = new();
     private Color currentPointerColor = new();
+    private bool cleared = false;
+
     float GetLuminance(Color color)
     {
         return 0.2126f * color.linear.r + 0.7152f * color.linear.g + 0.0722f * color.linear.b;
     }
 
+    void ClearDrawPointer()
+    {
+        cleared = true;
+        pointerIndicatorTexture.SetPixel(PixelPosX, PixelPosY, pointerIndicatorTexColor);
+        pointerIndicatorTexture.Apply();
+    }
+
     void UpdateDrawPointer()
     {
+        if (cleared) return;
         pointerIndicatorTexture.SetPixel(lastPointerPos.x, lastPointerPos.y, pointerIndicatorTexColor);
         lastPointerPos.x = PixelPosX;
         lastPointerPos.y = PixelPosY;
@@ -910,7 +975,7 @@ public class MainScript : MonoBehaviour
 
     public void SaveImage()
     {
-        string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Image", Application.dataPath, "LevelMap", new ExtensionFilter[] { new("QOI", new string[] { "qoi" }), new("PNG", new string[] { "png" }) });
+        string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Image", Application.dataPath, "LevelMap", new ExtensionFilter[] { new("QOI ", new string[] { "qoi" }), new("PNG ", new string[] { "png" }) });
 
         if (string.IsNullOrEmpty(filePath))
             return;
@@ -938,123 +1003,94 @@ public class MainScript : MonoBehaviour
     }
 
     // Project
+    [Header("Project")]
+    public UnityEvent onLoadProjectFailed;
     /*
     public void NewProject()
     {
         // TODO: Open Window with defining new project image size and with cancel button oraz create button
     }
+    */
 
-    public void LoadProject()
+    public void LoadProject(bool start)
     {
-        string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Vertex Map Draft", Application.dataPath, new ExtensionFilter[] { new ExtensionFilter("Vertex Map Draft", new string[] { "vmd" }) }, false);
-        if (filePaths.Length != 0)
+        string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Level Map Project", Application.dataPath, new ExtensionFilter[] { new ExtensionFilter("Level Project ", new string[] { "lep" }) }, false);
+        if (filePaths.Length != 0 && !string.IsNullOrEmpty(filePaths[0]))
         {
-            DraftData data = FileWriter.ReadFromBinaryFile<DraftData>(filePaths[0]);
+            ProjectData data = FileWriter.ReadFromBinaryFile<ProjectData>(filePaths[0]);
 
-            print("Author: " + data.author);
-            print("Date: " + data.date);
-            print("Name: " + data.name);
-            print("App Version: " + data.version);
+            Debug.Log("FileName: " + data.fileName);
+            Debug.Log("Date: " + data.date);
+            Debug.Log("Editor Version: " + data.editorVersion);
+            Debug.Log("Format Version: " + data.formatVersion);
 
-            mapTex = new(1, 1);
-            mapTex.filterMode = FilterMode.Point;
-            mapTex.LoadImage(data.mapTexture);
-            image.texture = mapTex;
-            image.color += new Color(0, 0, 0, 1f);
-
-            isLevelCreated = true;
-
-            drawTex = new(1, 1);
-            drawTex.filterMode = FilterMode.Point;
-            drawTex.LoadImage(data.drawTexture);
-            drawImage.texture = drawTex;
-            drawImage.color += new Color(0, 0, 0, 1f);
-
-            pointerIndicatorTexture = new(mapTex.width, mapTex.height);
-            pointerIndicatorTexture.filterMode = FilterMode.Point;
-            Color def = new(0, 0, 0, 0);
-            for (int x = 0; x < drawTex.width; x++)
+            if (data.formatVersion > ProjectFileFormatConst.GetProjectFileFormatVersion())
             {
-                for (int y = 0; y < drawTex.height; y++)
-                {
-                    pointerIndicatorTexture.SetPixel(x, y, def);
-                }
+                Debug.Log("Newer Version of Project File not supported!");
+                if (start) onLoadProjectFailed?.Invoke();
+                return;
             }
-            pointerIndicatorTexture.Apply();
-            pointerIndicatorImage.texture = pointerIndicatorTexture;
-            pointerIndicatorImage.color += new Color(0, 0, 0, 1f);
 
-            GenerateGrid(mapTex.width, mapTex.height);
+            CreateLevelTexture(data.width, data.height);
 
-            ResetSettings();
+            foreach (TileData tile in data.tiles)
+            {
+                Color color = new Color32(tile.r, tile.g, tile.b, tile.a);
+                drawTexture.SetPixel(tile.x, tile.y, color);
+            }
+            drawTexture.Apply();
         }
         else
         {
             Debug.Log("No files loaded");
+            if (start) onLoadProjectFailed?.Invoke();
+            return;
         }
     }
 
     public void SaveProject()
     {
-        if (isTextureLoaded)
+        if (isLevelCreated)
         {
-            if (currentVertexGroup.Vertexes.Count != 0)
+            string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Project", Application.dataPath, "Project", new ExtensionFilter[] { new ExtensionFilter("Level Project ", new string[] { "lep" }) });
+            if (!string.IsNullOrEmpty(filePath))
             {
-                isInteractionBlocked = true;
-
-                PopupSystem.CreateWindow("Vertex Group",
-                "You have one unfinished vertex group.\n" +
-                "If you want to save your draft, your changes will be lost.\n" +
-                "Are you sure you want to do this?",
-                "Yes", () =>
+                List<TileData> ModifiedTiles = new();
+                for (int x = 0; x < drawTexture.width; ++x)
                 {
-                    isInteractionBlocked = false;
-
-                    for (int i = 0; i < currentVertexGroup.Vertexes.Count; i++)
+                    for (int y = 0; y < drawTexture.height; ++y)
                     {
-                        drawTex.SetPixel((int)currentVertexGroup.Vertexes[i].x, (int)currentVertexGroup.Vertexes[i].y, new Color(0, 0, 0, 0));
-                    }
-                    drawTex.Apply();
-                    currentVertexGroup.Clear();
-
-                    string filePath = StandaloneFileBrowser.SaveFilePanel("Save Vertex Map Draft", Application.dataPath, "VertexMapDraft.vmd", new ExtensionFilter[] { new ExtensionFilter("Vertex Map Draft", new string[] { "vmd" }) });
-                    if (filePath != null && filePath != "")
-                    {
-                        DraftData data = new()
+                        Color c = drawTexture.GetPixel(x, y);
+                        if (c != TileTypeColorMap.GetColor(TileType.Default))
                         {
-                            author = "Unknown",
-                            name = "Vertex Map",
-                            date = DateTime.Now,
-                            version = Application.version,
-                            mapTexture = mapTex.EncodeToPNG(),
-                            drawTexture = drawTex.EncodeToPNG()
-                        };
-                        FileWriter.WriteToBinaryFile(filePath, data, false);
+                            Color32 color = c;
+                            TileData tileData = new()
+                            {
+                                x = x,
+                                y = y,
+                                r = color.r,
+                                g = color.g,
+                                b = color.b,
+                                a = color.a
+                            };
+
+                            ModifiedTiles.Add(tileData);
+                        }
                     }
-                },
-                "No", () =>
-                {
-                    isInteractionBlocked = false;
-                });
+                }
 
-                return;
-            }
-
-            string filePath = StandaloneFileBrowser.SaveFilePanel("Save Vertex Map Draft", Application.dataPath, "VertexMapDraft.vmd", new ExtensionFilter[] { new ExtensionFilter("Vertex Map Draft", new string[] { "vmd" }) });
-            if (filePath != null && filePath != "")
-            {
-                DraftData data = new()
+                ProjectData data = new()
                 {
-                    author = "Unknown",
-                    name = "Vertex Map",
+                    fileName = Path.GetFileNameWithoutExtension(filePath),
                     date = DateTime.Now,
-                    version = Application.version,
-                    mapTexture = mapTex.EncodeToPNG(),
-                    drawTexture = drawTex.EncodeToPNG()
+                    editorVersion = Application.version,
+                    formatVersion = ProjectFileFormatConst.GetProjectFileFormatVersion(),
+                    width = (uint)drawTexture.width,
+                    height = (uint)drawTexture.height,
+                    tiles = ModifiedTiles.ToArray()
                 };
                 FileWriter.WriteToBinaryFile(filePath, data, false);
             }
         }
     }
-    */
 }

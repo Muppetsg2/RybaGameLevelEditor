@@ -149,4 +149,10 @@ public class StartMenuManager : MonoBehaviour
         if (startMenuCanvas != null) startMenuCanvas.gameObject.SetActive(false);
         if (editorCanvas != null) editorCanvas.gameObject.SetActive(true);
     }
+
+    public void CloseEditor()
+    {
+        if (editorCanvas != null) editorCanvas.gameObject.SetActive(false);
+        if (startMenuCanvas != null) startMenuCanvas.gameObject.SetActive(true);
+    }
 }
