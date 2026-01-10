@@ -112,7 +112,7 @@ This ensures:
 
 ## Release Info & Tags
 
-**Current Release:** v1.0.0\
+**Current Release:** [v1.0.0](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/v1.0.0)\
 **Release Notes:** First full-featured stable version.\
 **Tags:** `Unity`, `Level Editor`, `Tile Map`, `Pixel Art`, `Game Development`
 
