@@ -1,7 +1,7 @@
 <div align="left">
 
 [![Unity Version](https://img.shields.io/badge/Unity-6000.0.60f1-blue)](https://unity.com/releases/editor/whats-new/6000.0.60f1)
-[![Release](https://img.shields.io/github/v/release/Muppetsg2/RybaGameLevelEditor)](https://github.com/Muppetsg2/RybaGameLevelEditor/releases)
+[![Release](https://img.shields.io/github/v/release/Muppetsg2/RybaGameLevelEditor)](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/latest)
 [![License](https://img.shields.io/github/license/Muppetsg2/RybaGameLevelEditor)](LICENSE)
 
 </div>
