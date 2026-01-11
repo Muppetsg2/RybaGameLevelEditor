@@ -1107,7 +1107,7 @@ public class MainScript : MonoBehaviour
             Debug.Log("Editor Version: " + data.editorVersion);
             Debug.Log("Format Version: " + data.formatVersion);
 
-            if (ProjectFileFormatConst.CompareWithMagicChars(data.magic))
+            if (!ProjectFileFormatConst.CompareWithMagicChars(data.magic))
             {
                 Debug.Log("The selected file is not a valid Level Project file. (Magic chars not equals)");
                 if (start) onLoadProjectFailed?.Invoke();
