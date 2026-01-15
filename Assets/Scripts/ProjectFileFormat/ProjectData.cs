@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices.WindowsRuntime;
 
 [Serializable]
 public struct TileData
@@ -45,7 +44,7 @@ public class ProjectFileFormatConst
 
     public static int GetProjectFileFormatVersion()
     {
-        return 1;
+        return 2;
     }
 }
 

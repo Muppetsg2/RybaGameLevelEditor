@@ -1160,22 +1160,6 @@ public class MainScript : MonoBehaviour
         rotationIndicatorTexture.Apply();
     }
 
-    private void ClearRotationIndicatorTexture()
-    {
-        for (int x = 0; x < drawTexture.width; ++x)
-        {
-            for (int y = 0; y < drawTexture.height; ++y)
-            {
-                if (IsRotationMarkerDrawn(x, y))
-                {
-                    ClearRotationIndicatorPixel(x, y);
-                }
-            }
-        }
-
-        rotationIndicatorTexture.Apply();
-    }
-
     // Grid
     private void DrawOutline(int x, int y)
     {
@@ -1337,7 +1321,37 @@ public class MainScript : MonoBehaviour
         isInteractionBlocked = false;
     }
 
-    // TODO: Update including new file format and rotation indicator
+    private void ShowLoadProjectErrorMessage(string error)
+    {
+        messageBox.ShowDialog("Load Project Error",
+                "The project could not be loaded.\n\n" + "Reason:\n" + error,
+                "OK", x => { }
+        );
+    }
+
+    private void ShowUpdateProjectMessage(string originalDirectory, string fileName)
+    {
+        messageBox.ShowDialog("Outdated Project",
+                "The loaded project file uses an older format.\n\n" +
+                "Do you want to update the project file now?\n",
+                "No", "Yes", x =>
+                {
+                    switch (x)
+                    {
+                        case DialogResult.Confirm:
+                            {
+                                SaveProject(originalDirectory, fileName);
+                                break;
+                            }
+                        case DialogResult.Cancel:
+                            {
+                                break;
+                            }
+                    }
+                }
+        );
+    }
+
     public void LoadProject(bool start)
     {
         string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Level Map Project", Application.dataPath, new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) }, false);
@@ -1368,12 +1382,23 @@ public class MainScript : MonoBehaviour
 
             CreateLevelTexture(data.width, data.height);
 
+            // TODO: Fix bug
             foreach (TileData tile in data.tiles)
             {
                 Color color = new Color32(tile.r, tile.g, tile.b, tile.a);
                 drawTexture.SetPixel(tile.x, tile.y, color);
+
+                TileDecoder.DecodeAlpha(tile.a, out _, out int rotation);
+                DrawRotationArrow(tile.x, tile.y, color, rotation);
             }
             drawTexture.Apply();
+            rotationIndicatorTexture.Apply();
+
+            bool deprecatedFormat = data.formatVersion < ProjectFileFormatConst.GetProjectFileFormatVersion();
+            if (deprecatedFormat)
+            {
+                ShowUpdateProjectMessage(Path.GetDirectoryName(filePaths[0]), data.fileName);
+            }
         }
         else
         {
@@ -1384,20 +1409,11 @@ public class MainScript : MonoBehaviour
         }
     }
 
-    private void ShowLoadProjectErrorMessage(string error)
-    {
-        messageBox.ShowDialog("Load Project Error",
-                "The project could not be loaded.\n\n" + "Reason:\n" + error,
-                "OK", x => {}
-        );
-    }
-
-    // TODO: Update including new file format and rotation indicator
-    public void SaveProject()
+    public void SaveProject(string directory = "", string fileName = "Project")
     {
         if (isLevelCreated)
         {
-            string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Project", Application.dataPath, "Project", new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) });
+            string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Project", string.IsNullOrEmpty(directory) ? Application.dataPath : directory, fileName, new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) });
             if (!string.IsNullOrEmpty(filePath))
             {
                 List<TileData> ModifiedTiles = new();
