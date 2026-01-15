@@ -666,14 +666,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pointerIndicatorTexColor: {r: 0, g: 0, b: 0, a: 0}
+  rotationIndicatorTexColor: {r: 0, g: 0, b: 0, a: 0}
   gridColor: {r: 0.654902, g: 0.4392157, b: 1, a: 1}
   brightPointerColor: {r: 0.87058824, g: 0.87058824, b: 0.87058824, a: 1}
   darkPointerColor: {r: 0.1792453, g: 0.1792453, b: 0.1792453, a: 1}
   drawImage: {fileID: 1461008929}
   viewRect: {fileID: 619533600}
   pointerIndicatorImage: {fileID: 374418452}
-  gridPixelsPerPixelWidth: 10
-  gridPixelsPerPixelHeight: 10
+  rotationIndicatorImage: {fileID: 2001972177}
+  rotationIndicatorBrightFactor: 0.4
+  rotationIndicatorDarkerFactor: 0.2
+  gridPixelsPerPixelWidth: 20
+  gridPixelsPerPixelHeight: 20
   gridImage: {fileID: 1706076710}
   scrollScaleSensitivityPercent: 0.1
   scrollMoveSensitivity: 5
@@ -683,17 +687,39 @@ MonoBehaviour:
   eraserButton: {fileID: 185215941}
   displacerButton: {fileID: 711745632}
   pipetteButton: {fileID: 1448336400}
-  defaultCursor: {fileID: 0}
-  brushCursor: {fileID: 2800000, guid: e5f1ce214aac8bf4aae085952ba7a38a, type: 3}
-  eraserCursor: {fileID: 2800000, guid: c17b5e2ede4699647ae586f75f06ebc2, type: 3}
-  displacerTakeCursor: {fileID: 2800000, guid: 36798c09352a72545803b6794df4dd34, type: 3}
-  displacerTakeXMarkCursor: {fileID: 2800000, guid: e4af49703861080449bced891a52471d, type: 3}
-  displacerPutCursor: {fileID: 2800000, guid: 86d2b50837c47d54a99e0c7247a342b4, type: 3}
-  pipetteCursor: {fileID: 2800000, guid: 94ebe608e0d8d5449a18349b480d041e, type: 3}
-  pipetteXMarkCursor: {fileID: 2800000, guid: 431b562ef2241464aaa99c5bdb042fbf, type: 3}
-  scrollMoveCursor: {fileID: 2800000, guid: a9b062971c43b254daf31752c3efecbf, type: 3}
-  scaleUpCursor: {fileID: 2800000, guid: 8aaf5ae13ce7051488c874b8d22e359d, type: 3}
-  scaleDownCursor: {fileID: 2800000, guid: ffc0ddc7658fe3b48b41ec07e6d3c03b, type: 3}
+  defaultCursor:
+    cursorImage: {fileID: 0}
+    cursorPosition: {x: 0, y: 0}
+  brushCursor:
+    cursorImage: {fileID: 2800000, guid: e5f1ce214aac8bf4aae085952ba7a38a, type: 3}
+    cursorPosition: {x: 0, y: 0}
+  eraserCursor:
+    cursorImage: {fileID: 2800000, guid: c17b5e2ede4699647ae586f75f06ebc2, type: 3}
+    cursorPosition: {x: 0, y: 0}
+  displacerTakeCursor:
+    cursorImage: {fileID: 2800000, guid: 36798c09352a72545803b6794df4dd34, type: 3}
+    cursorPosition: {x: 0, y: 0}
+  displacerTakeXMarkCursor:
+    cursorImage: {fileID: 2800000, guid: e4af49703861080449bced891a52471d, type: 3}
+    cursorPosition: {x: 0, y: 0}
+  displacerPutCursor:
+    cursorImage: {fileID: 2800000, guid: 86d2b50837c47d54a99e0c7247a342b4, type: 3}
+    cursorPosition: {x: 0, y: 0}
+  pipetteCursor:
+    cursorImage: {fileID: 2800000, guid: 94ebe608e0d8d5449a18349b480d041e, type: 3}
+    cursorPosition: {x: 0, y: 0}
+  pipetteXMarkCursor:
+    cursorImage: {fileID: 2800000, guid: 431b562ef2241464aaa99c5bdb042fbf, type: 3}
+    cursorPosition: {x: 0, y: 0}
+  scrollMoveCursor:
+    cursorImage: {fileID: 2800000, guid: a9b062971c43b254daf31752c3efecbf, type: 3}
+    cursorPosition: {x: 128, y: 128}
+  scaleUpCursor:
+    cursorImage: {fileID: 2800000, guid: 8aaf5ae13ce7051488c874b8d22e359d, type: 3}
+    cursorPosition: {x: 128, y: 128}
+  scaleDownCursor:
+    cursorImage: {fileID: 2800000, guid: ffc0ddc7658fe3b48b41ec07e6d3c03b, type: 3}
+    cursorPosition: {x: 128, y: 128}
   brushTypeDropdown: {fileID: 1356937401}
   powerInput: {fileID: 1755444105}
   rotationDropdown: {fileID: 994607855}
@@ -6994,7 +7020,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4155715502644968803, guid: 09c9de4cf1a41534193195700bc80b0e, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 0.8133334
       objectReference: {fileID: 0}
     - target: {fileID: 4261306674195717728, guid: 09c9de4cf1a41534193195700bc80b0e, type: 3}
       propertyPath: labelFontSize
@@ -7077,8 +7103,12 @@ PrefabInstance:
       value: 0.654902
       objectReference: {fileID: 0}
     - target: {fileID: 5127621017676002630, guid: 09c9de4cf1a41534193195700bc80b0e, type: 3}
-      propertyPath: m_AnchoredPosition.y
+      propertyPath: m_LocalPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5127621017676002630, guid: 09c9de4cf1a41534193195700bc80b0e, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0.0000019073486
       objectReference: {fileID: 0}
     - target: {fileID: 6662201872754320656, guid: 09c9de4cf1a41534193195700bc80b0e, type: 3}
       propertyPath: m_fontSize
@@ -7468,6 +7498,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 2001972176}
   - {fileID: 374418451}
   - {fileID: 1706076709}
   m_Father: {fileID: 619533600}
@@ -10071,6 +10102,78 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1943702050}
+  m_CullTransparentMesh: 1
+--- !u!1 &2001972175
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2001972176}
+  - component: {fileID: 2001972178}
+  - component: {fileID: 2001972177}
+  m_Layer: 5
+  m_Name: RotationIndicatorRawImage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2001972176
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001972175}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1461008928}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2001972177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001972175}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 0}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+--- !u!222 &2001972178
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001972175}
   m_CullTransparentMesh: 1
 --- !u!1 &2041114174
 GameObject:

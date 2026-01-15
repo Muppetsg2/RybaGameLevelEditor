@@ -1,3 +1,4 @@
+using NativeDialogs.Runtime;
 using SFB;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using NativeDialogs.Runtime;
 
 public enum Tool { Brush, Eraser, DisplacerTake, DisplacerPut, Pipette };
 
@@ -17,7 +17,8 @@ public class MainScript : MonoBehaviour
 
     // Colors
     [Header("Colors")]
-    [SerializeField] private Color pointerIndicatorTexColor = new(0f, 0f, 0f, 0f);
+    [SerializeField] private Color pointerIndicatorTexColor = Color.clear;
+    [SerializeField] private Color rotationIndicatorTexColor = Color.clear;
     [SerializeField] private Color gridColor = Color.white;
     [SerializeField] private Color brightPointerColor = Color.white;
     [SerializeField] private Color darkPointerColor = Color.black;
@@ -109,6 +110,12 @@ public class MainScript : MonoBehaviour
     [Header("Pointer Indicator Texture")]
     [SerializeField] private RawImage pointerIndicatorImage;
     private Texture2D pointerIndicatorTexture = null;
+
+    [Header("Rotation Indicator Texture")]
+    [SerializeField] private RawImage rotationIndicatorImage;
+    private Texture2D rotationIndicatorTexture = null;
+    [SerializeField][Range(0.0f, 1.0f)] private float rotationIndicatorBrightFactor = 0.35f;
+    [SerializeField][Range(0.0f, 1.0f)] private float rotationIndicatorDarkerFactor = 0.35f;
 
     // Grid Texture
     [Header("Grid Texture")]
@@ -206,13 +213,38 @@ public class MainScript : MonoBehaviour
 
                 if (colorChanged)
                 {
+                    UpdateRotationIndicatorPixel(PixelPosX, PixelPosY);
                     UpdateDrawPointer();
                 }
             }
 
-            if (Input.GetMouseButton(0))
+            bool leftMouseBtnHold = Input.GetMouseButton(0);
+            bool rightMouseBtnHold = Input.GetMouseButton(1);
+            if (leftMouseBtnHold || rightMouseBtnHold)
             {
-                if (CurrentTool == Tool.Brush)
+                if (CurrentTool == Tool.Eraser || (rightMouseBtnHold && CurrentTool == Tool.Brush))
+                {
+                    if (rightMouseBtnHold)
+                    {
+                        brushButton.interactable = true;
+                        eraserButton.interactable = false;
+                        Cursor.SetCursor(eraserCursor.cursorImage, eraserCursor.cursorPosition, CursorMode.Auto);
+                    }
+
+                    if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default) && !erases.Exists(d => d.Pos == _pixelPos))
+                    {
+                        EraseData data = new()
+                        {
+                            Pos = _pixelPos,
+                            RemovedColor = drawTexture.GetPixel(_pixelPos.x, _pixelPos.y),
+                            BackgroundColor = TileTypeColorMap.GetColor(TileType.Default)
+                        };
+
+                        erases.Add(data);
+                        _ = new EraseMove(ref drawTexture, data);
+                    }
+                }
+                else if (CurrentTool == Tool.Brush)
                 {
                     if (!draws.Exists(d => d.Pos == _pixelPos))
                     {
@@ -227,22 +259,8 @@ public class MainScript : MonoBehaviour
                         _ = new DrawMove(ref drawTexture, data);
                     }
                 }
-                else if (CurrentTool == Tool.Eraser)
-                {
-                    if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default) && !erases.Exists(d => d.Pos == _pixelPos))
-                    {
-                        EraseData data = new()
-                        {
-                            Pos = _pixelPos,
-                            RemovedColor = drawTexture.GetPixel(_pixelPos.x, _pixelPos.y),
-                            BackgroundColor = TileTypeColorMap.GetColor(TileType.Default)
-                        };
 
-                        erases.Add(data);
-                        _ = new EraseMove(ref drawTexture, data);
-                    }
-                }
-
+                UpdateRotationIndicatorTexture();
                 UpdateDrawPointer();
             }
 
@@ -290,10 +308,35 @@ public class MainScript : MonoBehaviour
             }
         }
 
-        if (isLevelCreated && !isInteractionBlocked && Input.GetMouseButtonUp(0))
+        bool leftMouseBtnUp = Input.GetMouseButtonUp(0);
+        bool rightMouseBtnUp = Input.GetMouseButtonUp(1);
+        if (isLevelCreated && !isInteractionBlocked && (leftMouseBtnUp || rightMouseBtnUp))
         {
             IMove moveToAdd = null;
-            if (CurrentTool == Tool.Brush)
+            if (CurrentTool == Tool.Eraser || (rightMouseBtnUp && CurrentTool == Tool.Brush))
+            {
+                if (rightMouseBtnUp)
+                {
+                    brushButton.interactable = false;
+                    eraserButton.interactable = true;
+                    Cursor.SetCursor(brushCursor.cursorImage, brushCursor.cursorPosition, CursorMode.Auto);
+                }
+
+                if (erases.Count != 0)
+                {
+                    if (erases.Count == 1)
+                    {
+                        moveToAdd = new EraseMove(ref drawTexture, erases[0]);
+                    }
+                    else if (erases.Count > 1)
+                    {
+                        moveToAdd = new MultipleEraseMove(ref drawTexture, erases);
+                    }
+
+                    erases.Clear();
+                }
+            }
+            else if (CurrentTool == Tool.Brush)
             {
                 if (draws.Count != 0)
                 {
@@ -307,22 +350,6 @@ public class MainScript : MonoBehaviour
                     }
 
                     draws.Clear();
-                }
-            }
-            else if (CurrentTool == Tool.Eraser)
-            {
-                if (erases.Count != 0)
-                {
-                    if (erases.Count == 1)
-                    {
-                        moveToAdd = new EraseMove(ref drawTexture, erases[0]);
-                    }
-                    else if (erases.Count > 1)
-                    {
-                        moveToAdd = new MultipleEraseMove(ref drawTexture, erases);
-                    }
-
-                    erases.Clear();
                 }
             }
 
@@ -764,18 +791,25 @@ public class MainScript : MonoBehaviour
     }
 
     // Cursor
+    [Serializable]
+    public struct CursorInfo
+    {
+        public Texture2D cursorImage;
+        public Vector2 cursorPosition;
+    };
+
     [Header("Cursor")]
-    [SerializeField] private Texture2D defaultCursor;
-    [SerializeField] private Texture2D brushCursor;
-    [SerializeField] private Texture2D eraserCursor;
-    [SerializeField] private Texture2D displacerTakeCursor;
-    [SerializeField] private Texture2D displacerTakeXMarkCursor;
-    [SerializeField] private Texture2D displacerPutCursor;
-    [SerializeField] private Texture2D pipetteCursor;
-    [SerializeField] private Texture2D pipetteXMarkCursor;
-    [SerializeField] private Texture2D scrollMoveCursor;
-    [SerializeField] private Texture2D scaleUpCursor;
-    [SerializeField] private Texture2D scaleDownCursor;
+    [SerializeField] private CursorInfo defaultCursor;
+    [SerializeField] private CursorInfo brushCursor;
+    [SerializeField] private CursorInfo eraserCursor;
+    [SerializeField] private CursorInfo displacerTakeCursor;
+    [SerializeField] private CursorInfo displacerTakeXMarkCursor;
+    [SerializeField] private CursorInfo displacerPutCursor;
+    [SerializeField] private CursorInfo pipetteCursor;
+    [SerializeField] private CursorInfo pipetteXMarkCursor;
+    [SerializeField] private CursorInfo scrollMoveCursor;
+    [SerializeField] private CursorInfo scaleUpCursor;
+    [SerializeField] private CursorInfo scaleDownCursor;
     private bool isCursorInView = false;
     private bool _isDefaultTile = false;
     private bool IsDefaultTile
@@ -796,7 +830,7 @@ public class MainScript : MonoBehaviour
 
     private void DefaultCursor()
     {
-        Cursor.SetCursor(defaultCursor, Vector2.zero, CursorMode.Auto);
+        Cursor.SetCursor(defaultCursor.cursorImage, defaultCursor.cursorPosition, CursorMode.Auto);
     }
 
     private void ToolCursor()
@@ -805,21 +839,27 @@ public class MainScript : MonoBehaviour
         {
             switch (CurrentTool)
             {
-                // TODO: Poprawic pozycje obrazków oraz pomyœleæ co zrobiæ z kolorami
                 case Tool.Brush:
-                    Cursor.SetCursor(brushCursor, new Vector2(0, 0), CursorMode.Auto);
+                    Cursor.SetCursor(brushCursor.cursorImage, brushCursor.cursorPosition, CursorMode.Auto);
                     break;
                 case Tool.Eraser:
-                    Cursor.SetCursor(eraserCursor, new Vector2(0, 0), CursorMode.Auto);
+                    Cursor.SetCursor(eraserCursor.cursorImage, eraserCursor.cursorPosition, CursorMode.Auto);
                     break;
                 case Tool.DisplacerTake:
-                    Cursor.SetCursor(IsDefaultTile ? displacerTakeXMarkCursor : displacerTakeCursor, new Vector2(0, 0), CursorMode.Auto);
+                    Cursor.SetCursor(
+                        IsDefaultTile ? displacerTakeXMarkCursor.cursorImage : displacerTakeCursor.cursorImage,
+                        IsDefaultTile ? displacerTakeXMarkCursor.cursorPosition : displacerTakeCursor.cursorPosition,
+                        CursorMode.Auto
+                    );
                     break;
                 case Tool.DisplacerPut:
-                    Cursor.SetCursor(displacerPutCursor, new Vector2(0, 0), CursorMode.Auto);
+                    Cursor.SetCursor(displacerPutCursor.cursorImage, displacerPutCursor.cursorPosition, CursorMode.Auto);
                     break;
                 case Tool.Pipette:
-                    Cursor.SetCursor(IsDefaultTile ? pipetteXMarkCursor : pipetteCursor, new Vector2(0, 0), CursorMode.Auto);
+                    Cursor.SetCursor(
+                        IsDefaultTile ? pipetteXMarkCursor.cursorImage : pipetteCursor.cursorImage,
+                        IsDefaultTile ? pipetteXMarkCursor.cursorPosition : pipetteCursor.cursorPosition,
+                        CursorMode.Auto);
                     break;
             }
         }
@@ -831,11 +871,11 @@ public class MainScript : MonoBehaviour
         {
             if (LastUp)
             {
-                Cursor.SetCursor(scaleUpCursor, new Vector2(32, 32), CursorMode.Auto);
+                Cursor.SetCursor(scaleUpCursor.cursorImage, scaleUpCursor.cursorPosition, CursorMode.Auto);
             }
             else
             {
-                Cursor.SetCursor(scaleDownCursor, new Vector2(32, 32), CursorMode.Auto);
+                Cursor.SetCursor(scaleDownCursor.cursorImage, scaleDownCursor.cursorPosition, CursorMode.Auto);
             }
         }
     }
@@ -844,7 +884,7 @@ public class MainScript : MonoBehaviour
     {
         if (isCursorInView)
         {
-            Cursor.SetCursor(scrollMoveCursor, new Vector2(32, 32), CursorMode.Auto);
+            Cursor.SetCursor(scrollMoveCursor.cursorImage, scrollMoveCursor.cursorPosition, CursorMode.Auto);
         }
     }
 
@@ -909,10 +949,13 @@ public class MainScript : MonoBehaviour
     private void GetPixelInfo(int x, int y)
     {
         Color color = drawTexture.GetPixel(x, y);
+
         XText.text = x.ToString();
         YText.text = (drawTexture.height - 1 - y).ToString();
         TypeText.text = TileDecoder.DecodeType(color).ToString();
+
         TileDecoder.DecodeAlpha(color.a, out int power, out int rotation);
+
         PowerText.text = power.ToString();
         RotationText.text = (rotation * 90).ToString() + "°";
     }
@@ -948,6 +991,23 @@ public class MainScript : MonoBehaviour
         pointerIndicatorImage.texture = pointerIndicatorTexture;
         pointerIndicatorImage.color = Color.white;
 
+        rotationIndicatorTexture = new((int)width * rotationIndicatorPixelWidth, (int)height * rotationIndicatorPixelHeight)
+        {
+            filterMode = FilterMode.Point
+        };
+
+        for (int x = 0; x < rotationIndicatorTexture.width; ++x)
+        {
+            for (int y = 0; y < rotationIndicatorTexture.height; ++y)
+            {
+                rotationIndicatorTexture.SetPixel(x, y, rotationIndicatorTexColor);
+            }
+        }
+
+        rotationIndicatorTexture.Apply();
+        rotationIndicatorImage.texture = rotationIndicatorTexture;
+        rotationIndicatorImage.color = Color.white;
+
         isLevelCreated = true;
 
         GenerateGrid(drawTexture.width, drawTexture.height);
@@ -955,32 +1015,211 @@ public class MainScript : MonoBehaviour
         ResetSettings();
     }
 
+    // Rotation Indicator Texture
+    private const int rotationIndicatorPixelWidth = 9;
+    private const int rotationIndicatorPixelHeight = 9;
+
+    private static readonly Vector2Int[] ArrowDownOffsets =
+    {
+        new(4, 1),
+        new(3, 2),
+        new(2, 3),
+        new(5, 2),
+        new(6, 3)
+    };
+
+    private Vector2Int GetRotationMarkerOffset(int rotation)
+    {
+        // rotation:
+        // 0 = down
+        // 1 = left
+        // 2 = up
+        // 3 = right
+        //
+        // Blok 9×9 (lokalne wspó³rzêdne):
+        //
+        // y=8  . . . . . . . . .
+        // y=7  . . . . U . . . .
+        // y=6  . . . . . . . . .
+        // y=5  . . . . . . . . .
+        // y=4  . L . . C . . R .
+        // y=3  . . . . . . . . .
+        // y=2  . . . . . . . . .
+        // y=1  . . . . D . . . .
+        // y=0  . . . . . . . . .
+        //
+        // C = (4,4)
+
+        return rotation switch
+        {
+            0 => new Vector2Int(4, 1), // down
+            1 => new Vector2Int(1, 4), // left
+            2 => new Vector2Int(4, 7), // up
+            3 => new Vector2Int(7, 4), // right
+            _ => new Vector2Int(4, 4),
+        };
+    }
+
+    private bool IsRotationMarkerDrawn(int x, int y)
+    {
+        int baseX = x * rotationIndicatorPixelWidth;
+        int baseY = y * rotationIndicatorPixelHeight;
+
+        bool res = false;
+        for (int i = 0; i < 5; ++i)
+        {
+            Vector2Int offset = GetRotationMarkerOffset(i);
+            Color a = rotationIndicatorTexture.GetPixel(baseX + offset.x, baseY + offset.y);
+            if (a != rotationIndicatorTexColor)
+            {
+                res = true;
+                break;
+            }
+        }
+
+        return res;
+    }
+
+    private Vector2Int RotateArrowOffset(Vector2Int offset, int rotation)
+    {
+        Vector2Int center = new(4, 4);
+        Vector2Int p = offset - center;
+
+        for (int i = 0; i < rotation; ++i)
+        {
+            p = new Vector2Int(p.y, -p.x);
+        }
+
+        p += center;
+
+        return new Vector2Int(p.x, p.y);
+    }
+
+    private void DrawRotationArrow(int x, int y, Color color, int rotation)
+    {
+        int baseX = x * rotationIndicatorPixelWidth;
+        int baseY = y * rotationIndicatorPixelHeight;
+
+        foreach (var offset in ArrowDownOffsets)
+        {
+            Vector2Int rotated = RotateArrowOffset(offset, rotation);
+
+            rotationIndicatorTexture.SetPixel(baseX + rotated.x, baseY + rotated.y, color);
+        }
+    }
+
+    private Color AdjustBrightness(Color color, float brightnessDelta)
+    {
+        Color.RGBToHSV(color, out float h, out float s, out float v);
+        v = Mathf.Clamp01(v + brightnessDelta);
+        return Color.HSVToRGB(h, s, v);
+    }
+
+    private void ClearRotationIndicatorPixel(int x, int y)
+    {
+        int baseX = x * rotationIndicatorPixelWidth;
+        int baseY = y * rotationIndicatorPixelHeight;
+
+        for (int dx = 0; dx < rotationIndicatorPixelWidth; ++dx)
+        {
+            for (int dy = 0; dy < rotationIndicatorPixelHeight; ++dy)
+            {
+                rotationIndicatorTexture.SetPixel(baseX + dx, baseY + dy, rotationIndicatorTexColor);
+            }
+        }
+    }
+
+    private void UpdateRotationIndicatorPixel(int x, int y)
+    {
+        if (IsRotationMarkerDrawn(x, y))
+        {
+            ClearRotationIndicatorPixel(x, y);
+        }
+
+        Color imagePixelColor = drawTexture.GetPixel(x, y);
+        if (imagePixelColor == TileTypeColorMap.GetColor(TileType.Default)) return;
+
+        float lum = GetLuminance(imagePixelColor);
+        Color markerColor = lum > 0.05f ? AdjustBrightness(imagePixelColor, -rotationIndicatorDarkerFactor) : AdjustBrightness(imagePixelColor, rotationIndicatorBrightFactor);
+
+        TileDecoder.DecodeAlpha(imagePixelColor.a, out _, out int rotation);
+
+        DrawRotationArrow(x, y, markerColor, rotation);
+    }
+
+    private void UpdateRotationIndicatorTexture()
+    {
+        for (int x = 0; x < drawTexture.width; ++x)
+        {
+            for (int y = 0; y < drawTexture.height; ++y)
+            {
+                UpdateRotationIndicatorPixel(x, y);
+            }
+        }
+
+        rotationIndicatorTexture.Apply();
+    }
+
+    private void ClearRotationIndicatorTexture()
+    {
+        for (int x = 0; x < drawTexture.width; ++x)
+        {
+            for (int y = 0; y < drawTexture.height; ++y)
+            {
+                if (IsRotationMarkerDrawn(x, y))
+                {
+                    ClearRotationIndicatorPixel(x, y);
+                }
+            }
+        }
+
+        rotationIndicatorTexture.Apply();
+    }
+
     // Grid
+    private void DrawOutline(int x, int y)
+    {
+        int baseX = x * gridPixelsPerPixelWidth;
+        int baseY = y * gridPixelsPerPixelHeight;
+
+        for (int i = 0; i < gridPixelsPerPixelWidth; ++i)
+        {
+            for (int j = 0; j < gridPixelsPerPixelHeight; ++j)
+            {
+                if (i == 0 || i == gridPixelsPerPixelWidth - 1 || j == 0 || j == gridPixelsPerPixelHeight - 1)
+                {
+                    gridTexture.SetPixel(baseX + i, baseY + j, gridColor);
+                }
+            }
+        }
+    }
+
     private void GenerateGrid(int mapWidth, int mapHeight)
     {
-        gridTexture = new(mapWidth * (gridPixelsPerPixelWidth + 1) + 1, mapHeight * (gridPixelsPerPixelHeight + 1) + 1)
+        int texWidth = mapWidth * gridPixelsPerPixelWidth;
+        int texHeight = mapHeight * gridPixelsPerPixelHeight;
+
+        gridTexture = new Texture2D(texWidth, texHeight)
         {
             filterMode = FilterMode.Point
         };
 
-        for (int x = 0; x <= mapWidth * (gridPixelsPerPixelWidth + 1) + 1; ++x)
+        for (int y = 0; y < texWidth; ++y)
         {
-            for (int y = 0; y <= mapHeight * (gridPixelsPerPixelHeight + 1) + 1; ++y)
+            for (int x = 0; x < texHeight; ++x)
             {
-                if (x % (gridPixelsPerPixelWidth + 1) == 0 || y % (gridPixelsPerPixelHeight + 1) == 0)
-                {
-                    gridTexture.SetPixel(x, y, gridColor);
-                }
-                else if (x == 0 || y == 0 || x == mapWidth * (gridPixelsPerPixelWidth + 1) + 1 || y == mapHeight * (gridPixelsPerPixelHeight + 1) + 1)
-                {
-                    gridTexture.SetPixel(x, y, gridColor);
-                }
-                else
-                {
-                    gridTexture.SetPixel(x, y, new Color(0f, 0f, 0f, 0f));
-                }
+                gridTexture.SetPixel(x, y, Color.clear);
             }
         }
+
+        for (int y = 0; y < mapWidth; ++y)
+        {
+            for (int x = 0; x < mapHeight; ++x)
+            {
+                DrawOutline(x, y);
+            }
+        }
+
         gridTexture.Apply();
         gridImage.texture = gridTexture;
         gridImage.color = Color.white;
@@ -1006,11 +1245,14 @@ public class MainScript : MonoBehaviour
     private void UpdateDrawPointer()
     {
         if (cleared) return;
+
         pointerIndicatorTexture.SetPixel(lastPointerPos.x, lastPointerPos.y, pointerIndicatorTexColor);
         lastPointerPos.x = PixelPosX;
         lastPointerPos.y = PixelPosY;
+
         Color imagePixelColor = drawTexture.GetPixel(lastPointerPos.x, lastPointerPos.y);
         currentPointerColor = GetLuminance(imagePixelColor) > 0.5f ? darkPointerColor : brightPointerColor;
+
         pointerIndicatorTexture.SetPixel(lastPointerPos.x, lastPointerPos.y, currentPointerColor);
         pointerIndicatorTexture.Apply();
     }
@@ -1095,6 +1337,7 @@ public class MainScript : MonoBehaviour
         isInteractionBlocked = false;
     }
 
+    // TODO: Update including new file format and rotation indicator
     public void LoadProject(bool start)
     {
         string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Level Map Project", Application.dataPath, new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) }, false);
@@ -1149,6 +1392,7 @@ public class MainScript : MonoBehaviour
         );
     }
 
+    // TODO: Update including new file format and rotation indicator
     public void SaveProject()
     {
         if (isLevelCreated)
