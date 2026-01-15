@@ -7693,7 +7693,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: SaveProject
+      value: SaveProjectButton
       objectReference: {fileID: 0}
     - target: {fileID: 3693801784341094694, guid: d5687eaae7e7ef9428bb3c988b24b975, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName

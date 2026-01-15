@@ -214,6 +214,7 @@ public class MainScript : MonoBehaviour
                 if (colorChanged)
                 {
                     UpdateRotationIndicatorPixel(PixelPosX, PixelPosY);
+                    rotationIndicatorTexture.Apply();
                     UpdateDrawPointer();
                 }
             }
@@ -1100,7 +1101,7 @@ public class MainScript : MonoBehaviour
         int baseX = x * rotationIndicatorPixelWidth;
         int baseY = y * rotationIndicatorPixelHeight;
 
-        foreach (var offset in ArrowDownOffsets)
+        foreach (Vector2Int offset in ArrowDownOffsets)
         {
             Vector2Int rotated = RotateArrowOffset(offset, rotation);
 
@@ -1113,6 +1114,13 @@ public class MainScript : MonoBehaviour
         Color.RGBToHSV(color, out float h, out float s, out float v);
         v = Mathf.Clamp01(v + brightnessDelta);
         return Color.HSVToRGB(h, s, v);
+    }
+
+    private Color GetRotationIndicatorColor(Color color)
+    {
+        float lum = GetLuminance(color);
+        Color markerColor = lum > 0.05f ? AdjustBrightness(color, -rotationIndicatorDarkerFactor) : AdjustBrightness(color, rotationIndicatorBrightFactor);
+        return markerColor;
     }
 
     private void ClearRotationIndicatorPixel(int x, int y)
@@ -1139,8 +1147,7 @@ public class MainScript : MonoBehaviour
         Color imagePixelColor = drawTexture.GetPixel(x, y);
         if (imagePixelColor == TileTypeColorMap.GetColor(TileType.Default)) return;
 
-        float lum = GetLuminance(imagePixelColor);
-        Color markerColor = lum > 0.05f ? AdjustBrightness(imagePixelColor, -rotationIndicatorDarkerFactor) : AdjustBrightness(imagePixelColor, rotationIndicatorBrightFactor);
+        Color markerColor = GetRotationIndicatorColor(imagePixelColor);
 
         TileDecoder.DecodeAlpha(imagePixelColor.a, out _, out int rotation);
 
@@ -1156,7 +1163,6 @@ public class MainScript : MonoBehaviour
                 UpdateRotationIndicatorPixel(x, y);
             }
         }
-
         rotationIndicatorTexture.Apply();
     }
 
@@ -1382,17 +1388,16 @@ public class MainScript : MonoBehaviour
 
             CreateLevelTexture(data.width, data.height);
 
-            // TODO: Fix bug
             foreach (TileData tile in data.tiles)
             {
                 Color color = new Color32(tile.r, tile.g, tile.b, tile.a);
                 drawTexture.SetPixel(tile.x, tile.y, color);
 
                 TileDecoder.DecodeAlpha(tile.a, out _, out int rotation);
-                DrawRotationArrow(tile.x, tile.y, color, rotation);
+                DrawRotationArrow(tile.x, tile.y, GetRotationIndicatorColor(color), rotation);
             }
-            drawTexture.Apply();
             rotationIndicatorTexture.Apply();
+            drawTexture.Apply();
 
             bool deprecatedFormat = data.formatVersion < ProjectFileFormatConst.GetProjectFileFormatVersion();
             if (deprecatedFormat)
@@ -1409,7 +1414,7 @@ public class MainScript : MonoBehaviour
         }
     }
 
-    public void SaveProject(string directory = "", string fileName = "Project")
+    private void SaveProject(string directory = "", string fileName = "Project")
     {
         if (isLevelCreated)
         {
@@ -1454,6 +1459,11 @@ public class MainScript : MonoBehaviour
                 FileWriter.WriteToBinaryFile(filePath, data, false);
             }
         }
+    }
+
+    public void SaveProjectButton()
+    {
+        SaveProject();
     }
 
     // Application
