@@ -1631,6 +1631,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3402673844832858818, guid: abb5ee8e18bc6ea458c89f1f8eb6deb8, type: 3}
+      propertyPath: maximumValue
+      value: 16384
+      objectReference: {fileID: 0}
+    - target: {fileID: 3402673844832858818, guid: abb5ee8e18bc6ea458c89f1f8eb6deb8, type: 3}
       propertyPath: placeholderText
       value: Width
       objectReference: {fileID: 0}
@@ -1802,6 +1806,10 @@ PrefabInstance:
     - target: {fileID: 3402673844832858818, guid: abb5ee8e18bc6ea458c89f1f8eb6deb8, type: 3}
       propertyPath: initialValue
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3402673844832858818, guid: abb5ee8e18bc6ea458c89f1f8eb6deb8, type: 3}
+      propertyPath: maximumValue
+      value: 16384
       objectReference: {fileID: 0}
     - target: {fileID: 3402673844832858818, guid: abb5ee8e18bc6ea458c89f1f8eb6deb8, type: 3}
       propertyPath: placeholderText

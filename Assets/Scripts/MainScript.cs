@@ -1276,6 +1276,12 @@ public class MainScript : MonoBehaviour
     }
 
     // Project
+    private enum ProjectFileAction
+    {
+        Load,
+        Save
+    }
+
     [Header("Project")]
     [SerializeField] private NativeDialogComponent messageBox;
     [SerializeField] private NewProjectWindow newProjectWindow;
@@ -1327,12 +1333,25 @@ public class MainScript : MonoBehaviour
         isInteractionBlocked = false;
     }
 
-    private void ShowLoadProjectErrorMessage(string error)
+    private void ShowProjectFileErrorMessage(ProjectFileAction action, string error)
     {
-        messageBox.ShowDialog("Load Project Error",
-                "The project could not be loaded.\n\n" + "Reason:\n" + error,
-                "OK", x => { }
-        );
+        string reason = string.IsNullOrEmpty(error) ? "Unknown error." : error;
+
+        string actionText = action.ToString();
+        string actionLower = actionText.ToLower();
+
+        string title = $"{actionText} Project Error";
+        string message = $"The project could not be {actionLower}ed.\n\nReason:\n{reason}";
+
+        messageBox.ShowDialog(title, message, "OK", x => {});
+    }
+
+    public void ShowInfoMessage(string title, string message)
+    {
+        string safeTitle = string.IsNullOrWhiteSpace(title) ? "Info" : title;
+        string safeMessage = string.IsNullOrWhiteSpace(message) ? "(No message provided)" : message;
+
+        messageBox.ShowDialog(safeTitle, safeMessage, "OK", x => { });
     }
 
     private void ShowUpdateProjectMessage(string originalDirectory, string fileName)
@@ -1363,28 +1382,72 @@ public class MainScript : MonoBehaviour
         string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Level Map Project", Application.dataPath, new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) }, false);
         if (filePaths.Length != 0 && !string.IsNullOrEmpty(filePaths[0]))
         {
-            ProjectData data = FileWriter.ReadFromBinaryFile<ProjectData>(filePaths[0]);
+            if (!ProjectFileFormatSerializer.TryReadData(filePaths[0], out ProjectData data, out int formatVersion, out ProjectFileError error))
+            {
+                string debugMessage;
+                string errorMessage;
+
+                switch (error)
+                {
+                    case ProjectFileError.FileNotFound:
+                        debugMessage = "Project file not found.";
+                        errorMessage = "The selected project file could not be found.";
+                        break;
+
+                    case ProjectFileError.InvalidMagic:
+                        debugMessage = "Invalid file signature (magic bytes do not match).";
+                        errorMessage = "The selected file is not a valid Level Project file.";
+                        break;
+
+                    case ProjectFileError.UnsupportedFormatVersion:
+                        debugMessage = "Unsupported project file format version.";
+                        errorMessage = "This project was created with a newer or unsupported version.";
+                        break;
+
+                    case ProjectFileError.InvalidMapSize:
+                        debugMessage = "Invalid or unsupported map size in project file.";
+                        errorMessage = "This project contains an unsupported map size.";
+                        break;
+
+                    case ProjectFileError.InvalidTileCount:
+                        debugMessage = "Invalid tile count in project file.";
+                        errorMessage = "This project file contains invalid tile data.";
+                        break;
+
+                    case ProjectFileError.InvalidStringLength:
+                        debugMessage = "Invalid string length detected (file may be corrupted).";
+                        errorMessage = "This project file appears to be corrupted and cannot be loaded.";
+                        break;
+
+                    case ProjectFileError.CannotOpenFile:
+                        debugMessage = "Failed to open project file (access denied or file in use).";
+                        errorMessage = "The selected project file could not be opened.";
+                        break;
+
+                    case ProjectFileError.CorruptedData:
+                        debugMessage = "Corrupted project file data detected.";
+                        errorMessage = "This project file is corrupted and cannot be loaded.";
+                        break;
+
+                    default:
+                        debugMessage = "Unknown error occurred while loading project file.";
+                        errorMessage = "An unknown error occurred while loading the project.";
+                        break;
+                }
+
+                Debug.LogError(debugMessage);
+
+                if (start)
+                    onLoadProjectFailed?.Invoke();
+
+                ShowProjectFileErrorMessage(ProjectFileAction.Load, errorMessage);
+                return;
+            }
 
             Debug.Log("FileName: " + data.fileName);
             Debug.Log("Date: " + data.date);
             Debug.Log("Editor Version: " + data.editorVersion);
-            Debug.Log("Format Version: " + data.formatVersion);
-
-            if (!ProjectFileFormatConst.CompareWithMagicChars(data.magic))
-            {
-                Debug.Log("The selected file is not a valid Level Project file. (Magic chars not equals)");
-                if (start) onLoadProjectFailed?.Invoke();
-                ShowLoadProjectErrorMessage("The selected file is not a valid Level Project file.");
-                return;
-            }
-
-            if (data.formatVersion > ProjectFileFormatConst.GetProjectFileFormatVersion())
-            {
-                Debug.Log("This project file uses a newer file format version that is not supported.");
-                if (start) onLoadProjectFailed?.Invoke();
-                ShowLoadProjectErrorMessage("This project file uses a newer file format version that is not supported.");
-                return;
-            }
+            Debug.Log("Format Version: " + formatVersion);
 
             CreateLevelTexture(data.width, data.height);
 
@@ -1399,18 +1462,22 @@ public class MainScript : MonoBehaviour
             rotationIndicatorTexture.Apply();
             drawTexture.Apply();
 
-            bool deprecatedFormat = data.formatVersion < ProjectFileFormatConst.GetProjectFileFormatVersion();
+            bool deprecatedFormat = formatVersion < ProjectFileFormatSerializer.FORMAT_VERSION;
             if (deprecatedFormat)
             {
                 ShowUpdateProjectMessage(Path.GetDirectoryName(filePaths[0]), data.fileName);
             }
+
+            // ShowInfoMessage("Project Loaded", "The project has been loaded successfully!");
         }
         else
         {
             Debug.Log("No project file was selected.");
-            if (start) onLoadProjectFailed?.Invoke();
-            ShowLoadProjectErrorMessage("No project file was selected.");
-            return;
+
+            if (start)
+                onLoadProjectFailed?.Invoke();
+
+            ShowProjectFileErrorMessage(ProjectFileAction.Load, "No project file was selected.");
         }
     }
 
@@ -1447,16 +1514,63 @@ public class MainScript : MonoBehaviour
 
                 ProjectData data = new()
                 {
-                    magic = ProjectFileFormatConst.GetProjectFileFormatMagicChars(),
-                    fileName = Path.GetFileNameWithoutExtension(filePath),
                     date = DateTime.Now,
                     editorVersion = Application.version,
-                    formatVersion = ProjectFileFormatConst.GetProjectFileFormatVersion(),
+                    fileName = Path.GetFileNameWithoutExtension(filePath),
                     width = (uint)drawTexture.width,
                     height = (uint)drawTexture.height,
                     tiles = ModifiedTiles.ToArray()
                 };
-                FileWriter.WriteToBinaryFile(filePath, data, false);
+
+                if (!ProjectFileFormatSerializer.TryWriteData(filePath, data, out ProjectFileError error))
+                {
+                    string debugMessage;
+                    string errorMessage;
+
+                    switch (error)
+                    {
+                        case ProjectFileError.InvalidMapSize:
+                            debugMessage = "Invalid or unsupported map size.";
+                            errorMessage = "The project contains an unsupported map size and cannot be saved.";
+                            break;
+
+                        case ProjectFileError.TilesNull:
+                            debugMessage = "Tiles array is not initialized.";
+                            errorMessage = "The project tiles are not initialized and cannot be saved.";
+                            break;
+
+                        case ProjectFileError.InvalidTileArraySize:
+                            debugMessage = "Tile array size is invalid.";
+                            errorMessage = "The project contains invalid tile data and cannot be saved";
+                            break;
+
+                        case ProjectFileError.InvalidStringLength:
+                            debugMessage = "String length is invalid (possibly corrupted).";
+                            errorMessage = "The project contains invalid data and cannot be saved.";
+                            break;
+
+                        case ProjectFileError.CannotOpenFile:
+                            debugMessage = "File could not be opened (access denied or file in use).";
+                            errorMessage = "The project file could not be opened for saving.";
+                            break;
+
+                        case ProjectFileError.WriteFailed:
+                            debugMessage = "Write operation failed.";
+                            errorMessage = "The project could not be saved due to a write error.";
+                            break;
+
+                        default:
+                            debugMessage = "Unknown error occurred while saving project file.";
+                            errorMessage = "An unknown error occurred and the project could not be saved.";
+                            break;
+                    }
+
+                    Debug.LogError(debugMessage);
+                    ShowProjectFileErrorMessage(ProjectFileAction.Save, errorMessage);
+                    return;
+                }
+
+                ShowInfoMessage("Project Saved", "The project has been saved successfully!");
             }
         }
     }
