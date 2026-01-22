@@ -112,9 +112,10 @@ This ensures:
 
 ## Release Info & Tags
 
-**Current Release:** [v1.0.0](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/v1.0.0)\
-**Release Notes:** First full-featured stable version.\
-**Tags:** `Unity`, `Level Editor`, `Tile Map`, `Pixel Art`, `Game Development`
+**Current Release:** [v1.0.2](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/latest)\
+**Release Notes:** Fixes input and grid bugs, adds rotation indicators and right-click erasing, and introduces\
+Project format v2 (smaller files, no v1 support).\
+**Tags:** `Unity`, `Tool`, `Level Editor`, `Tile Map`, `Tile Map Editor`, `Pixel Art`, `Game Development`
 
 ## Technologies
 
