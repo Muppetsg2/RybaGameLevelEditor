@@ -177,6 +177,8 @@ public class MainScript : MonoBehaviour
             GetPixelInfo(PixelPosX, PixelPosY);
 
             IsDefaultTile = drawTexture.GetPixel(PixelPosX, PixelPosY) == TileTypeColorMap.GetColor(TileType.Default);
+            bool leftMouseBtnHold = Input.GetMouseButton(0);
+            bool rightMouseBtnHold = Input.GetMouseButton(1);
 
             if (Input.GetMouseButtonDown(0))
             {
@@ -218,10 +220,7 @@ public class MainScript : MonoBehaviour
                     UpdateDrawPointer();
                 }
             }
-
-            bool leftMouseBtnHold = Input.GetMouseButton(0);
-            bool rightMouseBtnHold = Input.GetMouseButton(1);
-            if (leftMouseBtnHold || rightMouseBtnHold)
+            else if (leftMouseBtnHold || rightMouseBtnHold)
             {
                 if (CurrentTool == Tool.Eraser || (rightMouseBtnHold && CurrentTool == Tool.Brush))
                 {
@@ -264,8 +263,13 @@ public class MainScript : MonoBehaviour
                 UpdateRotationIndicatorTexture();
                 UpdateDrawPointer();
             }
-
-            if (Input.mouseScrollDelta.y != 0f)
+            else if (Input.GetMouseButtonDown(2))
+            {
+                scrollMoveEnabled = true;
+                startMousePos = Input.mousePosition;
+                startImagePos = drawImageRect.transform.localPosition;
+            }
+            else if (Input.mouseScrollDelta.y != 0f)
             {
                 if (Input.GetKey(KeyCode.LeftControl))
                 {
@@ -276,13 +280,6 @@ public class MainScript : MonoBehaviour
                 {
                     Move();
                 }
-            }
-
-            if (Input.GetMouseButtonDown(2))
-            {
-                scrollMoveEnabled = true;
-                startMousePos = Input.mousePosition;
-                startImagePos = drawImageRect.transform.localPosition;
             }
 
             if (scrollMoveEnabled)
