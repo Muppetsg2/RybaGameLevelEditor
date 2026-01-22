@@ -573,6 +573,8 @@ public class MainScript : MonoBehaviour
 
         movesHistory[actualMoveId].Undo();
         --actualMoveId;
+
+        UpdateRotationIndicatorTexture();
     }
 
     public void Redo()
@@ -583,6 +585,8 @@ public class MainScript : MonoBehaviour
 
         ++actualMoveId;
         movesHistory[actualMoveId].Do();
+
+        UpdateRotationIndicatorTexture();
     }
 
     private bool CheckDisplacerTakeUndoRedo(bool undo)
@@ -1467,8 +1471,6 @@ public class MainScript : MonoBehaviour
             {
                 ShowUpdateProjectMessage(Path.GetDirectoryName(filePaths[0]), data.fileName);
             }
-
-            // ShowInfoMessage("Project Loaded", "The project has been loaded successfully!");
         }
         else
         {
