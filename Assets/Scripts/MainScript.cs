@@ -151,6 +151,37 @@ public class MainScript : MonoBehaviour
 
     private void Update()
     {
+        bool leftMouseBtnHold = Input.GetMouseButton(0);
+        bool rightMouseBtnHold = Input.GetMouseButton(1);
+        bool middleMouseBtnHold = Input.GetMouseButton(2);
+        bool isDrawing = isLevelCreated && !isInteractionBlocked && (leftMouseBtnHold || rightMouseBtnHold || middleMouseBtnHold);
+
+        bool ctrlHold = Input.GetKey(KeyCode.LeftControl);
+        bool cmdHold = Input.GetKey(KeyCode.LeftCommand);
+        bool shiftHold = Input.GetKey(KeyCode.LeftShift);
+
+        if (!isDrawing)
+        {
+            if ((ctrlHold || cmdHold) && Input.GetKeyDown(KeyCode.Z))
+            {
+                // Cmd+Shift+Z [Redo (macOS)]
+                if (cmdHold && shiftHold)
+                {
+                    Redo();
+                }
+                else
+                {
+                    Undo();
+                }
+            }
+
+            // Ctrl+Y [Redo (Windows/Linux)]
+            if (ctrlHold && Input.GetKeyDown(KeyCode.Y))
+            {
+                Redo();
+            }
+        }
+
         undoButton.interactable = !(actualMoveId == -1);
         redoButton.interactable = !(movesHistory.Count == 0 || actualMoveId + 1 == movesHistory.Count);
 
@@ -177,8 +208,6 @@ public class MainScript : MonoBehaviour
             GetPixelInfo(PixelPosX, PixelPosY);
 
             IsDefaultTile = drawTexture.GetPixel(PixelPosX, PixelPosY) == TileTypeColorMap.GetColor(TileType.Default);
-            bool leftMouseBtnHold = Input.GetMouseButton(0);
-            bool rightMouseBtnHold = Input.GetMouseButton(1);
 
             if (Input.GetMouseButtonDown(0))
             {
@@ -271,7 +300,7 @@ public class MainScript : MonoBehaviour
             }
             else if (Input.mouseScrollDelta.y != 0f)
             {
-                if (Input.GetKey(KeyCode.LeftControl))
+                if (ctrlHold || cmdHold)
                 {
                     IsScaling = true;
                     Scale();
@@ -308,6 +337,7 @@ public class MainScript : MonoBehaviour
 
         bool leftMouseBtnUp = Input.GetMouseButtonUp(0);
         bool rightMouseBtnUp = Input.GetMouseButtonUp(1);
+        bool middleMouseBtnUp = Input.GetMouseButtonUp(2);
         if (isLevelCreated && !isInteractionBlocked && (leftMouseBtnUp || rightMouseBtnUp))
         {
             IMove moveToAdd = null;
@@ -355,7 +385,7 @@ public class MainScript : MonoBehaviour
             UpdateDrawPointer();
         }
 
-        if (Input.GetMouseButtonUp(2))
+        if (middleMouseBtnUp)
         {
             scrollMoveEnabled = false;
 
@@ -369,7 +399,7 @@ public class MainScript : MonoBehaviour
             }
         }
 
-        if (IsScaling && Input.GetKeyUp(KeyCode.LeftControl))
+        if (IsScaling && (Input.GetKeyUp(KeyCode.LeftControl) || Input.GetKeyUp(KeyCode.LeftCommand)))
         {
             IsScaling = false;
         }
@@ -1250,7 +1280,7 @@ public class MainScript : MonoBehaviour
 
     public void SaveImage()
     {
-        string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Image", Application.dataPath, "LevelMap", new ExtensionFilter[] { new("QOI", new string[] { "qoi" }), new("PNG", new string[] { "png" }) });
+        string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Image", GetProjectsFolder(), "LevelMap", new ExtensionFilter[] { new("QOI", new string[] { "qoi" }), new("PNG", new string[] { "png" }) });
 
         if (string.IsNullOrEmpty(filePath)) return;
 
@@ -1378,9 +1408,30 @@ public class MainScript : MonoBehaviour
         );
     }
 
+    private string GetProjectsFolder()
+    {
+        const string folderName = "RybaLevelProjects";
+        string folder = "";
+
+#if UNITY_STANDALONE_OSX
+    folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Documents", folderName);
+#elif UNITY_STANDALONE_WIN
+        folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), folderName);
+#elif UNITY_STANDALONE_LINUX
+    folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), folderName);
+#else
+    folder = Path.Combine(Application.dataPath, folderName); // fallback
+#endif
+
+        if (!Directory.Exists(folder))
+            Directory.CreateDirectory(folder);
+
+        return folder;
+    }
+
     public void LoadProject(bool start)
     {
-        string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Level Map Project", Application.dataPath, new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) }, false);
+        string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Level Map Project", GetProjectsFolder(), new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) }, false);
         if (filePaths.Length != 0 && !string.IsNullOrEmpty(filePaths[0]))
         {
             if (!ProjectFileFormatSerializer.TryReadData(filePaths[0], out ProjectData data, out int formatVersion, out ProjectFileError error))
@@ -1484,7 +1535,7 @@ public class MainScript : MonoBehaviour
     {
         if (isLevelCreated)
         {
-            string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Project", string.IsNullOrEmpty(directory) ? Application.dataPath : directory, fileName, new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) });
+            string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Project", string.IsNullOrEmpty(directory) ? GetProjectsFolder() : directory, fileName, new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) });
             if (!string.IsNullOrEmpty(filePath))
             {
                 List<TileData> ModifiedTiles = new();
