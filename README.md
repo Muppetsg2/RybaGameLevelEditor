@@ -125,6 +125,15 @@ Project format v2 (smaller files, no v1 support).\
 * Unity UI for interactions
 * Command pattern for undo/redo system
 
+## Used Libraries
+
+This project uses the following third-party libraries:
+
+* [**PoiPoiTooltip**](https://github.com/arket/PoiPoiTooltip) – provides lightweight, contextual tooltips used throughout the editor UI.
+* [**UnityStandaloneFileBrowser**](https://github.com/gkngkc/UnityStandaloneFileBrowser) – enables native file open and save dialogs across supported platforms.
+* [**UnityNativeDialog**](https://github.com/FingerCaster/UnityNativeDialog) – used for displaying native system message dialogs (alerts, confirmations, errors).
+* [**Unity.QOI**](https://github.com/ltmx/Unity.QOI) – used for exporting maps to the lossless `QOI` image format.
+
 ## Notes
 
 * Tile colors must be exact, without interpolation or lossy compression.
