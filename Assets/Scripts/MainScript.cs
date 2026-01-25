@@ -117,6 +117,8 @@ public class MainScript : MonoBehaviour
     [SerializeField][Range(0.0f, 1.0f)] private float rotationIndicatorBrightFactor = 0.35f;
     [SerializeField][Range(0.0f, 1.0f)] private float rotationIndicatorDarkerFactor = 0.35f;
 
+    private bool temporaryEraser = false;
+
     // Grid Texture
     [Header("Grid Texture")]
     [SerializeField] private int gridPixelsPerPixelWidth = 25;
@@ -251,10 +253,12 @@ public class MainScript : MonoBehaviour
             }
             else if (leftMouseBtnHold || rightMouseBtnHold)
             {
-                if (CurrentTool == Tool.Eraser || (rightMouseBtnHold && CurrentTool == Tool.Brush))
+                bool rightEraser = rightMouseBtnHold && CurrentTool == Tool.Brush;
+                if ((CurrentTool == Tool.Eraser && leftMouseBtnHold) || rightEraser)
                 {
-                    if (rightMouseBtnHold)
+                    if (rightEraser)
                     {
+                        temporaryEraser = true;
                         brushButton.interactable = true;
                         eraserButton.interactable = false;
                         Cursor.SetCursor(eraserCursor.cursorImage, eraserCursor.cursorPosition, CursorMode.Auto);
@@ -341,10 +345,12 @@ public class MainScript : MonoBehaviour
         if (isLevelCreated && !isInteractionBlocked && (leftMouseBtnUp || rightMouseBtnUp))
         {
             IMove moveToAdd = null;
-            if (CurrentTool == Tool.Eraser || (rightMouseBtnUp && CurrentTool == Tool.Brush))
+            bool rightEraser = rightMouseBtnUp && CurrentTool == Tool.Brush;
+            if ((CurrentTool == Tool.Eraser && leftMouseBtnUp) || rightEraser)
             {
-                if (rightMouseBtnUp)
+                if (rightEraser)
                 {
+                    temporaryEraser = false;
                     brushButton.interactable = false;
                     eraserButton.interactable = true;
                     Cursor.SetCursor(brushCursor.cursorImage, brushCursor.cursorPosition, CursorMode.Auto);
@@ -916,6 +922,7 @@ public class MainScript : MonoBehaviour
     {
         if (isCursorInView)
         {
+            ClearDrawPointer();
             Cursor.SetCursor(scrollMoveCursor.cursorImage, scrollMoveCursor.cursorPosition, CursorMode.Auto);
         }
     }
@@ -995,11 +1002,6 @@ public class MainScript : MonoBehaviour
     // Image
     public void CreateLevelTexture(uint width, uint height)
     {
-        pointerIndicatorTexture = new((int)width, (int)height)
-        {
-            filterMode = FilterMode.Point
-        };
-
         drawTexture = new((int)width, (int)height)
         {
             filterMode = FilterMode.Point
@@ -1011,13 +1013,25 @@ public class MainScript : MonoBehaviour
             for (int y = 0; y < drawTexture.height; ++y)
             {
                 drawTexture.SetPixel(x, y, defaultTileColor);
-                pointerIndicatorTexture.SetPixel(x, y, pointerIndicatorTexColor);
             }
         }
 
         drawTexture.Apply();
         drawImage.texture = drawTexture;
         drawImage.color = Color.white;
+
+        pointerIndicatorTexture = new((int)width * pointerIndicatorPixelWidth, (int)height * pointerIndicatorPixelHeight)
+        {
+            filterMode = FilterMode.Point
+        };
+
+        for (int x = 0; x < pointerIndicatorTexture.width; ++x)
+        {
+            for (int y = 0; y < pointerIndicatorTexture.height; ++y)
+            {
+                pointerIndicatorTexture.SetPixel(x, y, pointerIndicatorTexColor);
+            }
+        }
 
         pointerIndicatorTexture.Apply();
         pointerIndicatorImage.texture = pointerIndicatorTexture;
@@ -1248,18 +1262,122 @@ public class MainScript : MonoBehaviour
 
     // Pointer Values
     private Vector2Int lastPointerPos = new();
-    private Color currentPointerColor = new();
     private bool cleared = false;
+
+    private const int pointerIndicatorPixelWidth = 9;
+    private const int pointerIndicatorPixelHeight = 9;
+
+    private static readonly Vector2Int[] DisplacerTakePointerOffsets =
+    {
+        new(0, 0), new(1, 0), new(0, 1), // LEFT_DOWN
+        new(8, 0), new(7, 0), new(8, 1), // RIGHT_DOWN
+        new(8, 8), new(7, 8), new(8, 7), // RIGHT_UP
+        new(0, 8), new(0, 7), new(1, 8) // LEFT_UP
+    };
+
+    private static readonly Vector2Int[] EraserPointerOffsets =
+    {
+        new(0, 0), new(0, 1), new(0, 2), new(0, 3), new(0, 4), new(0, 5), new(0, 6), new(0, 7), new(0, 8), // LEFT
+        new(8, 0), new(8, 1), new(8, 2), new(8, 3), new(8, 4), new(8, 5), new(8, 6), new(8, 7), new(8, 8), // RIGHT
+        new(1, 0), new(2, 0), new(3, 0), new(4, 0), new(5, 0), new(6, 0), new(7, 0), // DOWN
+        new(1, 8), new(2, 8), new(3, 8), new(4, 8), new(5, 8), new(6, 8), new(7, 8) // UP
+    };
 
     private float GetLuminance(Color color)
     {
         return 0.2126f * color.linear.r + 0.7152f * color.linear.g + 0.0722f * color.linear.b;
     }
 
-    private void ClearDrawPointer()
+    private void DrawPointer(int x, int y)
+    {
+        cleared = false;
+        int baseX = x * pointerIndicatorPixelWidth;
+        int baseY = y * pointerIndicatorPixelHeight;
+
+        switch (CurrentTool)
+        {
+            case Tool.DisplacerPut:
+                {
+                    Color currentPointerColor = TileTypeColorMap.GetColor(displacerMoveData.MoveType);
+                    for (int dx = 0; dx < pointerIndicatorPixelWidth; ++dx)
+                    {
+                        for (int dy = 0; dy < pointerIndicatorPixelHeight; ++dy)
+                        {
+                            pointerIndicatorTexture.SetPixel(baseX + dx, baseY + dy, currentPointerColor);
+                        }
+                    }
+                    break;
+                }
+            case Tool.Brush:
+                {
+                    Color currentPointerColor = Color.white;
+                    if (temporaryEraser)
+                    {
+                        Color imagePixelColor = drawTexture.GetPixel(lastPointerPos.x, lastPointerPos.y);
+                        currentPointerColor = GetLuminance(imagePixelColor) > 0.5f ? darkPointerColor : brightPointerColor;
+                        foreach (Vector2Int offset in EraserPointerOffsets)
+                        {
+                            pointerIndicatorTexture.SetPixel(baseX + offset.x, baseY + offset.y, currentPointerColor);
+                        }
+                        break;
+                    }
+
+                    currentPointerColor = TileTypeColorMap.GetColor(tileType);
+                    for (int dx = 0; dx < pointerIndicatorPixelWidth; ++dx)
+                    {
+                        for (int dy = 0; dy < pointerIndicatorPixelHeight; ++dy)
+                        {
+                            pointerIndicatorTexture.SetPixel(baseX + dx, baseY + dy, currentPointerColor);
+                        }
+                    }
+                    break;
+                }
+            case Tool.Eraser:
+                {
+                    Color imagePixelColor = drawTexture.GetPixel(lastPointerPos.x, lastPointerPos.y);
+                    Color currentPointerColor = GetLuminance(imagePixelColor) > 0.5f ? darkPointerColor : brightPointerColor;
+                    foreach (Vector2Int offset in EraserPointerOffsets)
+                    {
+                        pointerIndicatorTexture.SetPixel(baseX + offset.x, baseY + offset.y, currentPointerColor);
+                    }
+                    break;
+                }
+            case Tool.DisplacerTake:
+                {
+                    Color imagePixelColor = drawTexture.GetPixel(lastPointerPos.x, lastPointerPos.y);
+                    Color currentPointerColor = GetLuminance(imagePixelColor) > 0.5f ? darkPointerColor : brightPointerColor;
+                    foreach (Vector2Int offset in DisplacerTakePointerOffsets)
+                    {
+                        pointerIndicatorTexture.SetPixel(baseX + offset.x, baseY + offset.y, currentPointerColor);
+                    }
+                    break;
+                }
+            case Tool.Pipette:
+                {
+                    // Don't draw anything
+                    break;
+                }
+        }
+    }
+
+    private void ClearDrawPointer(int x, int y)
     {
         cleared = true;
-        pointerIndicatorTexture.SetPixel(PixelPosX, PixelPosY, pointerIndicatorTexColor);
+        int baseX = x * pointerIndicatorPixelWidth;
+        int baseY = y * pointerIndicatorPixelHeight;
+
+        for (int dx = 0; dx < pointerIndicatorPixelWidth; ++dx)
+        {
+            for (int dy = 0; dy < pointerIndicatorPixelHeight; ++dy)
+            {
+                pointerIndicatorTexture.SetPixel(baseX + dx, baseY + dy, pointerIndicatorTexColor);
+            }
+        }
+    }
+
+    private void ClearDrawPointer()
+    {
+        ClearDrawPointer(PixelPosX, PixelPosY);
         pointerIndicatorTexture.Apply();
     }
 
@@ -1267,14 +1385,12 @@ public class MainScript : MonoBehaviour
     {
         if (cleared) return;
 
-        pointerIndicatorTexture.SetPixel(lastPointerPos.x, lastPointerPos.y, pointerIndicatorTexColor);
+        ClearDrawPointer(lastPointerPos.x, lastPointerPos.y);
         lastPointerPos.x = PixelPosX;
         lastPointerPos.y = PixelPosY;
 
-        Color imagePixelColor = drawTexture.GetPixel(lastPointerPos.x, lastPointerPos.y);
-        currentPointerColor = GetLuminance(imagePixelColor) > 0.5f ? darkPointerColor : brightPointerColor;
+        DrawPointer(lastPointerPos.x, lastPointerPos.y);
 
-        pointerIndicatorTexture.SetPixel(lastPointerPos.x, lastPointerPos.y, currentPointerColor);
         pointerIndicatorTexture.Apply();
     }
 
