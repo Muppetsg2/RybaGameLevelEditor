@@ -25,7 +25,7 @@
       "hash": "2d8dc81ddde4d053ab7dce12906ad53f32570f6b"
     },
     "com.unity.2d.animation": {
-      "version": "10.2.1",
+      "version": "10.2.2",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -70,7 +70,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.2d.psdimporter": {
-      "version": "9.1.0",
+      "version": "9.1.1",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -117,7 +117,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ai.navigation": {
-      "version": "2.0.9",
+      "version": "2.0.11",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -126,7 +126,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.burst": {
-      "version": "1.8.25",
+      "version": "1.8.28",
       "depth": 3,
       "source": "registry",
       "dependencies": {
@@ -136,7 +136,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.collab-proxy": {
-      "version": "2.9.3",
+      "version": "2.11.4",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
@@ -166,9 +166,9 @@
       "depth": 0,
       "source": "builtin",
       "dependencies": {
-        "com.unity.2d.animation": "10.2.1",
+        "com.unity.2d.animation": "10.2.2",
         "com.unity.2d.pixel-perfect": "5.0.3",
-        "com.unity.2d.psdimporter": "9.1.0",
+        "com.unity.2d.psdimporter": "9.1.1",
         "com.unity.2d.sprite": "1.0.0",
         "com.unity.2d.spriteshape": "10.0.7",
         "com.unity.2d.tilemap": "1.0.0",
@@ -186,7 +186,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.26",
+      "version": "2.0.27",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -253,7 +253,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.timeline": {
-      "version": "1.8.10",
+      "version": "1.8.11",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -284,7 +284,7 @@
       }
     },
     "com.unity.visualscripting": {
-      "version": "1.9.9",
+      "version": "1.9.10",
       "depth": 0,
       "source": "registry",
       "dependencies": {
