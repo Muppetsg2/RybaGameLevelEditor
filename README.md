@@ -8,7 +8,7 @@
 
 <div align="center">
   <img width="50%" align="center" src="./Banner.png">
-  <br></br>
+  <br>
 </div>
 
 **RybaGameLevelEditor** is a Unity-based level editor that allows creating game levels by drawing the map as a pixel-based image.
@@ -23,7 +23,7 @@ This editor is designed to provide:
 ## Overview
 <div align="center">
   <img width="50%" align="center" src="./Screenshot1.png">
-  <br></br>
+  <br>
 </div>
 
 * **Level = Texture2D**
@@ -90,11 +90,15 @@ Project files allow:
 * versioned compatibility checks
 * fast loading and saving of large maps
 
+The detailed documentation for project file format is available here:
+
+**[LEP File Format (`.lep`)](./docs/LEPFileFormat.md)**
+
 ## Level Data Encoding (RGBA)
 
 The detailed documentation for tile encoding is available here:
 
-**[Level Data Storage Using Colors (RGBA)](./LevelDataStorage.md)**
+**[Level Data Storage Using Colors (RGBA)](./docs/LevelDataStorage.md)**
 
 Summary:
 
@@ -112,10 +116,16 @@ This ensures:
 
 ## Release Info & Tags
 
-**Current Release:** [v1.0.2](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/latest)\
-**Release Notes:** Fixes input and grid bugs, adds rotation indicators and right-click erasing, and introduces\
-Project format v2 (smaller files, no v1 support).\
-**Tags:** `Unity`, `Tool`, `Level Editor`, `Tile Map`, `Tile Map Editor`, `Pixel Art`, `Game Development`
+**Release:** [v1.0.5](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/latest)\
+**Release Notes:**
+- Added tool keybindings
+- Added undo and redo shortcuts
+- Added tooltips
+- Added different pointer indicators for tools
+- Fixed bug with non-rectangular maps
+- Fixed bug when reading rotation from project files
+- Introduced project format v3 (smaller files with backward compatibility)
+**Tags:** `Unity`, `Tool`, `Level Editor`, `Tile Map`, `Tile Map Editor`, `Pixel Art`, `Game Development`, `QOI`
 
 ## Technologies
 
@@ -133,6 +143,10 @@ This project uses the following third-party libraries:
 * [**UnityStandaloneFileBrowser**](https://github.com/gkngkc/UnityStandaloneFileBrowser) – enables native file open and save dialogs across supported platforms.
 * [**UnityNativeDialog**](https://github.com/FingerCaster/UnityNativeDialog) – used for displaying native system message dialogs (alerts, confirmations, errors).
 * [**Unity.QOI**](https://github.com/ltmx/Unity.QOI) – used for exporting maps to the lossless `QOI` image format.
+
+## File Format Documentations
+- [LEP File Format (`.lep`)](./docs/LEPFileFormat.md)
+- [Level Data Storage Using Colors (RGBA)](./docs/LevelDataStorage.md)
 
 ## Notes
 

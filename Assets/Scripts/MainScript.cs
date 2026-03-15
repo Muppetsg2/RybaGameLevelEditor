@@ -182,6 +182,24 @@ public class MainScript : MonoBehaviour
             {
                 Redo();
             }
+
+            // Check Tool Key Bindings
+            if (Input.GetKeyDown(brushKey))
+            {
+                BrushKey();
+            }
+            else if(Input.GetKeyDown(eraserKey))
+            {
+                EraserKey();
+            }
+            else if (Input.GetKeyDown(displacerKey))
+            {
+                DisplacerKey();
+            }
+            else if (Input.GetKeyDown(pipetteKey))
+            {
+                PipetteKey();
+            }
         }
 
         undoButton.interactable = !(actualMoveId == -1);
@@ -673,6 +691,11 @@ public class MainScript : MonoBehaviour
     [SerializeField] private Button eraserButton;
     [SerializeField] private Button displacerButton;
     [SerializeField] private Button pipetteButton;
+    [SerializeField] private KeyCode brushKey;
+    [SerializeField] private KeyCode eraserKey;
+    [SerializeField] private KeyCode displacerKey;
+    [SerializeField] private KeyCode pipetteKey;
+
     private Tool _currentTool = Tool.Brush;
     private Tool CurrentTool
     {
@@ -724,6 +747,15 @@ public class MainScript : MonoBehaviour
     }
 
     // Brush
+    public void BrushKey()
+    {
+        if (!isLevelCreated)
+            return;
+
+        ChangeToBrush(true);
+        UpdateDrawPointer();
+    }
+
     public void BrushButton()
     {
         if (!isLevelCreated)
@@ -742,6 +774,15 @@ public class MainScript : MonoBehaviour
     }
 
     // Eraser
+    public void EraserKey()
+    {
+        if (!isLevelCreated)
+            return;
+
+        ChangeToEraser(true);
+        UpdateDrawPointer();
+    }
+
     public void EraserButton()
     {
         if (!isLevelCreated)
@@ -760,6 +801,15 @@ public class MainScript : MonoBehaviour
     }
 
     // Displacer
+    public void DisplacerKey()
+    {
+        if (!isLevelCreated)
+            return;
+
+        ChangeToDisplacer(true);
+        UpdateDrawPointer();
+    }
+
     public void DisplacerButton()
     {
         if (!isLevelCreated)
@@ -778,6 +828,15 @@ public class MainScript : MonoBehaviour
     }
 
     // Pipette
+    public void PipetteKey()
+    {
+        if (!isLevelCreated)
+            return;
+
+        ChangeToPipette(true);
+        UpdateDrawPointer();
+    }
+
     public void PipetteButton()
     {
         if (!isLevelCreated)
@@ -1239,17 +1298,17 @@ public class MainScript : MonoBehaviour
             filterMode = FilterMode.Point
         };
 
-        for (int y = 0; y < texWidth; ++y)
+        for (int x = 0; x < texWidth; ++x)
         {
-            for (int x = 0; x < texHeight; ++x)
+            for (int y = 0; y < texHeight; ++y)
             {
                 gridTexture.SetPixel(x, y, Color.clear);
             }
         }
 
-        for (int y = 0; y < mapWidth; ++y)
+        for (int x = 0; x < mapWidth; ++x)
         {
-            for (int x = 0; x < mapHeight; ++x)
+            for (int y = 0; y < mapHeight; ++y)
             {
                 DrawOutline(x, y);
             }
@@ -1550,7 +1609,7 @@ public class MainScript : MonoBehaviour
         string[] filePaths = StandaloneFileBrowser.OpenFilePanel("Load Level Map Project", GetProjectsFolder(), new ExtensionFilter[] { new ExtensionFilter("Level Project", new string[] { "lep" }) }, false);
         if (filePaths.Length != 0 && !string.IsNullOrEmpty(filePaths[0]))
         {
-            if (!ProjectFileFormatSerializer.TryReadData(filePaths[0], out ProjectData data, out int formatVersion, out ProjectFileError error))
+            if (!ProjectFileFormatSerializer.TryReadData(filePaths[0], out ProjectData data, out uint formatVersion, out ProjectFileError error))
             {
                 string debugMessage;
                 string errorMessage;
@@ -1621,10 +1680,10 @@ public class MainScript : MonoBehaviour
 
             foreach (TileData tile in data.tiles)
             {
-                Color color = new Color32(tile.r, tile.g, tile.b, tile.a);
+                Color color = new Color32(tile.color.r, tile.color.g, tile.color.b, tile.color.a);
                 drawTexture.SetPixel(tile.x, tile.y, color);
 
-                TileDecoder.DecodeAlpha(tile.a, out _, out int rotation);
+                TileDecoder.DecodeAlpha(tile.color.a, out _, out int rotation);
                 DrawRotationArrow(tile.x, tile.y, GetRotationIndicatorColor(color), rotation);
             }
             rotationIndicatorTexture.Apply();
@@ -1665,12 +1724,15 @@ public class MainScript : MonoBehaviour
                             Color32 color = c;
                             TileData tileData = new()
                             {
-                                x = x,
-                                y = y,
-                                r = color.r,
-                                g = color.g,
-                                b = color.b,
-                                a = color.a
+                                x = (ushort)x,
+                                y = (ushort)y,
+                                color = new()
+                                {
+                                    r = color.r,
+                                    g = color.g,
+                                    b = color.b,
+                                    a = color.a
+                                }
                             };
 
                             ModifiedTiles.Add(tileData);
@@ -1683,8 +1745,8 @@ public class MainScript : MonoBehaviour
                     date = DateTime.Now,
                     editorVersion = Application.version,
                     fileName = Path.GetFileNameWithoutExtension(filePath),
-                    width = (uint)drawTexture.width,
-                    height = (uint)drawTexture.height,
+                    width = (ushort)drawTexture.width,
+                    height = (ushort)drawTexture.height,
                     tiles = ModifiedTiles.ToArray()
                 };
 

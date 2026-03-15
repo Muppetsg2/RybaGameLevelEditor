@@ -703,6 +703,10 @@ MonoBehaviour:
   eraserButton: {fileID: 185215941}
   displacerButton: {fileID: 711745632}
   pipetteButton: {fileID: 1448336400}
+  brushKey: 98
+  eraserKey: 101
+  displacerKey: 100
+  pipetteKey: 112
   defaultCursor:
     cursorImage: {fileID: 0}
     cursorPosition: {x: 0, y: 0}
@@ -1019,7 +1023,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   toolTipRect: {fileID: 2765999812846237320, guid: d359185b61504e44987729de42dc39e4, type: 3}
-  toolTipInfo: Eraser
+  toolTipInfo: <style=Key>E</style>raser
   playAnimationType: 0
 --- !u!1 &188233186
 GameObject:
@@ -3967,7 +3971,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   toolTipRect: {fileID: 2765999812846237320, guid: d359185b61504e44987729de42dc39e4, type: 3}
-  toolTipInfo: Displacer
+  toolTipInfo: <style=Key>D</style>isplacer
   playAnimationType: 0
 --- !u!1001 &754247266
 PrefabInstance:
@@ -6455,7 +6459,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   toolTipRect: {fileID: 2765999812846237320, guid: d359185b61504e44987729de42dc39e4, type: 3}
-  toolTipInfo: Brush
+  toolTipInfo: <style=Key>B</style>rush
   playAnimationType: 0
 --- !u!1 &1169858316
 GameObject:
@@ -7578,7 +7582,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   toolTipRect: {fileID: 2765999812846237320, guid: d359185b61504e44987729de42dc39e4, type: 3}
-  toolTipInfo: Pipette
+  toolTipInfo: <style=Key>P</style>ipette
   playAnimationType: 0
 --- !u!1 &1461008927
 GameObject:

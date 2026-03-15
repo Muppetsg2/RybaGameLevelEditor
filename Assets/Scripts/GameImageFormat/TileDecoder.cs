@@ -27,4 +27,11 @@ public class TileDecoder : MonoBehaviour
         rotation = a & 0b00000011;
         power = 63 - ((a >> 2) & 0b00111111);
     }
+
+    public static void DecodeAlpha(int alpha, out int power, out int rotation)
+    {
+        int a = alpha & 0xFF;
+        rotation = a & 0b00000011;
+        power = 63 - ((a >> 2) & 0b00111111);
+    }
 }
