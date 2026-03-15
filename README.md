@@ -124,7 +124,7 @@ This ensures:
 * Added different pointer indicators for tools
 * Fixed bug with non-rectangular maps
 * Fixed bug when reading rotation from project files
-* Introduced project format v3 (smaller files with backward compatibility)
+* Introduced project format v3 (smaller files with backward compatibility)\
 **Tags:** `Unity`, `Tool`, `Level Editor`, `Tile Map`, `Tile Map Editor`, `Pixel Art`, `Game Development`, `QOI`
 
 ## Technologies
