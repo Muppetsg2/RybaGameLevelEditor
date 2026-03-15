@@ -116,15 +116,17 @@ This ensures:
 
 ## Release Info & Tags
 
-**Release:** [v1.0.5](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/latest)\
+**Release:** [v1.0.5](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/latest)
+
 **Release Notes:**
-- Added tool keybindings
-- Added undo and redo shortcuts
-- Added tooltips
-- Added different pointer indicators for tools
-- Fixed bug with non-rectangular maps
-- Fixed bug when reading rotation from project files
-- Introduced project format v3 (smaller files with backward compatibility)
+* Added tool keybindings
+* Added undo and redo shortcuts
+* Added tooltips
+* Added different pointer indicators for tools
+* Fixed bug with non-rectangular maps
+* Fixed bug when reading rotation from project files
+* Introduced project format v3 (smaller files with backward compatibility)
+
 **Tags:** `Unity`, `Tool`, `Level Editor`, `Tile Map`, `Tile Map Editor`, `Pixel Art`, `Game Development`, `QOI`
 
 ## Technologies
@@ -140,13 +142,16 @@ This ensures:
 This project uses the following third-party libraries:
 
 * [**PoiPoiTooltip**](https://github.com/arket/PoiPoiTooltip) – provides lightweight, contextual tooltips used throughout the editor UI.
+* [**DOTween (HOTween v2)**](https://github.com/Demigiant/dotween) – a fast and flexible tweening engine used for UI animations and smooth transitions.
+* [**NaughtyAttributes**](https://github.com/dbrizov/NaughtyAttributes) – adds useful attributes that enhance the Unity Inspector and simplify editor scripting.
+* [**UI Number Input**](https://assetstore.unity.com/packages/tools/gui/ui-number-input-183602) - provides numeric input fields with validation, increment/decrement controls, and improved usability.
 * [**UnityStandaloneFileBrowser**](https://github.com/gkngkc/UnityStandaloneFileBrowser) – enables native file open and save dialogs across supported platforms.
 * [**UnityNativeDialog**](https://github.com/FingerCaster/UnityNativeDialog) – used for displaying native system message dialogs (alerts, confirmations, errors).
 * [**Unity.QOI**](https://github.com/ltmx/Unity.QOI) – used for exporting maps to the lossless `QOI` image format.
 
 ## File Format Documentations
-- [LEP File Format (`.lep`)](./docs/LEPFileFormat.md)
-- [Level Data Storage Using Colors (RGBA)](./docs/LevelDataStorage.md)
+* [LEP File Format (`.lep`)](./docs/LEPFileFormat.md)
+* [Level Data Storage Using Colors (RGBA)](./docs/LevelDataStorage.md)
 
 ## Notes
 
