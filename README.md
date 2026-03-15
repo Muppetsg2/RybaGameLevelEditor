@@ -116,7 +116,8 @@ This ensures:
 
 ## Release Info & Tags
 
-**Release:** [v1.0.5](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/latest)\
+**Release:** [v1.0.5](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/latest)
+
 **Release Notes:**
 * Added tool keybindings
 * Added undo and redo shortcuts
@@ -124,7 +125,8 @@ This ensures:
 * Added different pointer indicators for tools
 * Fixed bug with non-rectangular maps
 * Fixed bug when reading rotation from project files
-* Introduced project format v3 (smaller files with backward compatibility)\
+* Introduced project format v3 (smaller files with backward compatibility)
+
 **Tags:** `Unity`, `Tool`, `Level Editor`, `Tile Map`, `Tile Map Editor`, `Pixel Art`, `Game Development`, `QOI`
 
 ## Technologies
