@@ -41,7 +41,7 @@ public class NewProjectWindow : MonoBehaviour
     public UnityEvent<uint, uint> onCreate;
     public UnityEvent onCancel;
 
-    private int dropdownValueUpdateCounter = 2;
+    private bool checkPreset = true;
 
     void Awake()
     {
@@ -61,9 +61,9 @@ public class NewProjectWindow : MonoBehaviour
             {
                 if (newValue == presetDropdown.OptionsCount - 1) return;
 
-                dropdownValueUpdateCounter = 2;
-
+                checkPreset = false;
                 widthInput.SetValue(presets[newValue].width);
+                checkPreset = true;
                 heightInput.SetValue(presets[newValue].height);
             });
         }
@@ -73,22 +73,22 @@ public class NewProjectWindow : MonoBehaviour
             widthInput.SetInitialValue(presets[(int)defaultPreset].width);
             widthInput.onValueChanged.AddListener((newValue, emptyValue) =>
             {
-                if (!emptyValue && heightInput.HasValue())
+                int height = 0;
+                if (!emptyValue && heightInput != null && heightInput.HasValue())
                 {
                     if (createBtn != null) createBtn.interactable = true;
+
+                    height = heightInput.GetValue();
                 }
                 else
                 {
                     if (createBtn != null) createBtn.interactable = false;
                 }
 
-                if (dropdownValueUpdateCounter != 0)
+                if (checkPreset && !IsPresetValue((int)presetDropdown.OptionIndex, newValue, height))
                 {
-                    --dropdownValueUpdateCounter;
-                    return;
+                    presetDropdown.SetOption((uint)(presetDropdown.OptionsCount - 1));
                 }
-
-                presetDropdown.SetOption((uint)(presetDropdown.OptionsCount - 1));
             });
         }
 
@@ -97,22 +97,22 @@ public class NewProjectWindow : MonoBehaviour
             heightInput.SetInitialValue(presets[(int)defaultPreset].height);
             heightInput.onValueChanged.AddListener((newValue, emptyValue) =>
             {
-                if (!emptyValue && widthInput.HasValue())
+                int width = 0;
+                if (!emptyValue && widthInput != null && widthInput.HasValue())
                 {
                     if (createBtn != null) createBtn.interactable = true;
+
+                    width = widthInput.GetValue();
                 }
                 else
                 {
                     if (createBtn != null) createBtn.interactable = false;
                 }
 
-                if (dropdownValueUpdateCounter != 0)
+                if (checkPreset && !IsPresetValue((int)presetDropdown.OptionIndex, width, newValue))
                 {
-                    --dropdownValueUpdateCounter;
-                    return;
+                    presetDropdown.SetOption((uint)(presetDropdown.OptionsCount - 1));
                 }
-
-                presetDropdown.SetOption((uint)(presetDropdown.OptionsCount - 1));
             });
         }
 
@@ -149,8 +149,33 @@ public class NewProjectWindow : MonoBehaviour
         if (window != null) window.SetActive(true);
     }
 
+    public void OpenWindow(int width, int height)
+    {
+        if (window != null) window.SetActive(true);
+
+        widthInput.SetValue(width);
+        heightInput.SetValue(height);
+
+        uint optIdx = 0;
+        foreach (Preset p in presets)
+        {
+            if (p.width == width && p.height == height)
+            {
+                break;
+            }
+            ++optIdx;
+        }
+
+        presetDropdown.SetOption(optIdx);
+    }
+
     public void CloseWindow()
     {
         if (window != null) window.SetActive(false);
+    }
+
+    private bool IsPresetValue(int presetIdx, int width, int height)
+    {
+        return presetIdx >= 0 && presetIdx < presets.Count && presets[presetIdx].width == width && presets[presetIdx].height == height;
     }
 }

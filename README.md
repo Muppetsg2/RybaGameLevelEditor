@@ -116,16 +116,18 @@ This ensures:
 
 ## Release Info & Tags
 
-**Release:** [v1.0.5](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/latest)
+**Release:** [v1.0.6](https://github.com/Muppetsg2/RybaGameLevelEditor/releases/latest)
 
 **Release Notes:**
-* Added tool keybindings
-* Added undo and redo shortcuts
-* Added tooltips
-* Added different pointer indicators for tools
-* Fixed bug with non-rectangular maps
-* Fixed bug when reading rotation from project files
-* Introduced project format v3 (smaller files with backward compatibility)
+* Fixed issue where changing height and width did not immediately switch to custom size
+* Updated New Project to default to the current level size, with automatic detection of small, medium, or large presets
+* Added reset button
+* Added frame button
+* Added icons to map size settings
+* Highlighted the Create button in the New Project window
+* Updated slider color in the brush type dropdown
+* Added project dimension display
+* Updated version label text
 
 **Tags:** `Unity`, `Tool`, `Level Editor`, `Tile Map`, `Tile Map Editor`, `Pixel Art`, `Game Development`, `QOI`
 

@@ -5,6 +5,7 @@ public interface IMove
 {
     void Do();
     void Undo();
+    int ColoredPixels();
 }
 
 public struct DrawData
@@ -56,6 +57,11 @@ public class DrawMove : IMove
         _tex.SetPixel(_pixelPos.x, _pixelPos.y, _undoColor);
         _tex.Apply();
     }
+
+    public int ColoredPixels()
+    {
+        return 1;
+    }
 }
 
 public class MultipleDrawMove : IMove
@@ -98,6 +104,11 @@ public class MultipleDrawMove : IMove
             _tex.SetPixel(_pixelPoses[i].x, _pixelPoses[i].y, _undoColors[i]);
         }
         _tex.Apply();
+    }
+
+    public int ColoredPixels()
+    {
+        return _pixelPoses.Count;
     }
 }
 
@@ -147,6 +158,11 @@ public class EraseMove : IMove
         _tex.SetPixel(_removedPos.x, _removedPos.y, _removedColor);
         _tex.Apply();
     }
+
+    public int ColoredPixels()
+    {
+        return -1;
+    }
 }
 
 public class MultipleEraseMove : IMove
@@ -187,6 +203,11 @@ public class MultipleEraseMove : IMove
             _tex.SetPixel(_removedPoses[i].x, _removedPoses[i].y, _removedColors[i]);
         }
         _tex.Apply();
+    }
+
+    public int ColoredPixels()
+    {
+        return -_removedPoses.Count;
     }
 }
 
@@ -232,6 +253,11 @@ public class DisplacerTakeMove : IMove
         _tex.SetPixel(_pos.x, _pos.y, _lastColor);
         _tex.Apply();
     }
+
+    public int ColoredPixels()
+    {
+        return -1;
+    }
 }
 
 public class DisplacerPutMove : IMove
@@ -265,6 +291,11 @@ public class DisplacerPutMove : IMove
         _tex.SetPixel(_data.FromPos.x, _data.FromPos.y, TileEncoder.EncodeColor(_data.MoveType, _data.MovePower, _data.MoveRotation));
         _tex.Apply();
     }
+
+    public int ColoredPixels()
+    {
+        return 0;
+    }
 }
 
 public class PipetteMove : IMove
@@ -279,4 +310,9 @@ public class PipetteMove : IMove
     public void Do() {}
 
     public void Undo() {}
+
+    public int ColoredPixels()
+    {
+        return 0;
+    }
 }

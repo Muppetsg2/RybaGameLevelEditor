@@ -70,6 +70,8 @@ public class NumberInput : MonoBehaviour
     [ReadOnly]
     private bool emptyValue = false;
 
+    private bool initialized = false;
+
     void OnValidate()
     {
         if (inputField != null)
@@ -177,6 +179,8 @@ public class NumberInput : MonoBehaviour
         {
             Debug.LogWarning($"DecrementButton not set in {gameObject.name}.NumberInput");
         }
+
+        initialized = true;
     }
 
     public bool HasValue()
@@ -186,6 +190,8 @@ public class NumberInput : MonoBehaviour
 
     public int GetValue()
     {
+        if (!initialized) return Mathf.Clamp(initialValue, minimumValue, maximumValue);
+
         return emptyValue ? minimumValue : value;
     }
 

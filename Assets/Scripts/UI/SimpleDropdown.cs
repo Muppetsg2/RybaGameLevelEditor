@@ -30,6 +30,11 @@ public class SimpleDropdown : MonoBehaviour
     [Header("Events")]
     public UnityEvent<int> onValueChanged;
 
+    public uint OptionIndex
+    {
+        get { return value; }
+    }
+
     public int OptionsCount
     {
         get { return options.Count; }
@@ -64,6 +69,7 @@ public class SimpleDropdown : MonoBehaviour
         {
             dropdown.onValueChanged.AddListener(newValue =>
             {
+                UpdateValue((uint)newValue);
                 onValueChanged?.Invoke(newValue);
             });
 
@@ -89,7 +95,7 @@ public class SimpleDropdown : MonoBehaviour
         }
     }
 
-    public void SetOption(uint optIdx)
+    private void UpdateValue(uint optIdx)
     {
         if (options.Count == 0)
         {
@@ -99,6 +105,11 @@ public class SimpleDropdown : MonoBehaviour
         {
             value = (uint)Mathf.Clamp((int)optIdx, 0, options.Count - 1);
         }
+    }
+
+    public void SetOption(uint optIdx)
+    {
+        UpdateValue(optIdx);
         dropdown.value = (int)value;
     }
 
@@ -120,6 +131,11 @@ public class SimpleDropdown : MonoBehaviour
     {
         options.AddRange(newOptions);
         ParseOptions();
+    }
+
+    public List<string> GetOptions()
+    {
+        return options;
     }
 
     public void ClearOptions()

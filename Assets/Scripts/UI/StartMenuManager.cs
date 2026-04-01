@@ -44,7 +44,7 @@ public class StartMenuManager : MonoBehaviour
     public UnityEvent onLoadProject;
     public UnityEvent<uint, uint> onNewProject;
 
-    private int dropdownValueUpdateCounter = 2;
+    private bool checkPreset = true;
 
     void Awake()
     {
@@ -64,9 +64,9 @@ public class StartMenuManager : MonoBehaviour
             {
                 if (newValue == presetDropdown.OptionsCount - 1) return;
 
-                dropdownValueUpdateCounter = 2;
-
+                checkPreset = false;
                 widthInput.SetValue(presets[newValue].width);
+                checkPreset = true;
                 heightInput.SetValue(presets[newValue].height);
             });
         }
@@ -76,22 +76,22 @@ public class StartMenuManager : MonoBehaviour
             widthInput.SetInitialValue(presets[(int)defaultPreset].width);
             widthInput.onValueChanged.AddListener((newValue, emptyValue) =>
             {
-                if (!emptyValue && heightInput.HasValue())
+                int height = 0;
+                if (!emptyValue && heightInput != null && heightInput.HasValue())
                 {
                     if (newProjectBtn != null) newProjectBtn.interactable = true;
+
+                    height = heightInput.GetValue();
                 }
                 else
                 {
                     if (newProjectBtn != null) newProjectBtn.interactable = false;
                 }
 
-                if (dropdownValueUpdateCounter != 0)
+                if (checkPreset && !IsPresetValue((int)presetDropdown.OptionIndex, newValue, height))
                 {
-                    --dropdownValueUpdateCounter;
-                    return;
+                    presetDropdown.SetOption((uint)(presetDropdown.OptionsCount - 1));
                 }
-
-                presetDropdown.SetOption((uint)(presetDropdown.OptionsCount - 1));
             });
         }
 
@@ -100,22 +100,22 @@ public class StartMenuManager : MonoBehaviour
             heightInput.SetInitialValue(presets[(int)defaultPreset].height);
             heightInput.onValueChanged.AddListener((newValue, emptyValue) =>
             {
-                if (!emptyValue && widthInput.HasValue())
+                int width = 0;
+                if (!emptyValue && widthInput != null && widthInput.HasValue())
                 {
                     if (newProjectBtn != null) newProjectBtn.interactable = true;
+
+                    width = widthInput.GetValue();
                 }
                 else
                 {
                     if (newProjectBtn != null) newProjectBtn.interactable = false;
                 }
 
-                if (dropdownValueUpdateCounter != 0)
+                if (checkPreset && !IsPresetValue((int)presetDropdown.OptionIndex, width, newValue))
                 {
-                    --dropdownValueUpdateCounter;
-                    return;
+                    presetDropdown.SetOption((uint)(presetDropdown.OptionsCount - 1));
                 }
-                
-                presetDropdown.SetOption((uint)(presetDropdown.OptionsCount - 1));
             });
         }
 
@@ -159,5 +159,10 @@ public class StartMenuManager : MonoBehaviour
     {
         if (editorCanvas != null) editorCanvas.gameObject.SetActive(false);
         if (startMenuCanvas != null) startMenuCanvas.gameObject.SetActive(true);
+    }
+
+    private bool IsPresetValue(int presetIdx, int width, int height)
+    {
+        return presetIdx >= 0 && presetIdx < presets.Count && presets[presetIdx].width == width && presets[presetIdx].height == height;
     }
 }

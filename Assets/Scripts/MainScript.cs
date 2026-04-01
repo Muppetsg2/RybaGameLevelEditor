@@ -6,6 +6,7 @@ using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public enum Tool { Brush, Eraser, DisplacerTake, DisplacerPut, Pipette };
@@ -157,6 +158,7 @@ public class MainScript : MonoBehaviour
         bool rightMouseBtnHold = Input.GetMouseButton(1);
         bool middleMouseBtnHold = Input.GetMouseButton(2);
         bool isDrawing = isLevelCreated && !isInteractionBlocked && (leftMouseBtnHold || rightMouseBtnHold || middleMouseBtnHold);
+        bool overUI = IsPointerOverBlockingUI();
 
         bool ctrlHold = Input.GetKey(KeyCode.LeftControl);
         bool cmdHold = Input.GetKey(KeyCode.LeftCommand);
@@ -169,18 +171,18 @@ public class MainScript : MonoBehaviour
                 // Cmd+Shift+Z [Redo (macOS)]
                 if (cmdHold && shiftHold)
                 {
-                    Redo();
+                    RedoBtn();
                 }
                 else
                 {
-                    Undo();
+                    UndoBtn();
                 }
             }
 
             // Ctrl+Y [Redo (Windows/Linux)]
             if (ctrlHold && Input.GetKeyDown(KeyCode.Y))
             {
-                Redo();
+                RedoBtn();
             }
 
             // Check Tool Key Bindings
@@ -204,13 +206,14 @@ public class MainScript : MonoBehaviour
 
         undoButton.interactable = !(actualMoveId == -1);
         redoButton.interactable = !(movesHistory.Count == 0 || actualMoveId + 1 == movesHistory.Count);
+        resetButton.interactable = coloredPixels != 0;
 
         RectTransformUtility.ScreenPointToLocalPointInRectangle(viewRect, Input.mousePosition, Camera.main, out mouseViewPos);
 
         mouseViewPos.x += ViewRectWidth * 0.5f;
         mouseViewPos.y += ViewRectHeight * 0.5f;
 
-        if (isLevelCreated && !isInteractionBlocked && mouseViewPos.x >= 0f && mouseViewPos.x <= ViewRectWidth && mouseViewPos.y >= 0f && mouseViewPos.y <= ViewRectHeight)
+        if (isLevelCreated && !isInteractionBlocked && !overUI && mouseViewPos.x >= 0f && mouseViewPos.x < ViewRectWidth && mouseViewPos.y >= 0f && mouseViewPos.y < ViewRectHeight)
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(drawImageRect, Input.mousePosition, Camera.main, out mouseImagePos);
 
@@ -222,121 +225,161 @@ public class MainScript : MonoBehaviour
             scalePivotPos.x = mouseImagePos.x / DrawImageRectWidth;
             scalePivotPos.y = mouseImagePos.y / DrawImageRectHeight;
 
-            PixelPosX = (int)Mathf.Clamp(mouseImagePos.x / pixelWidth, 0f, drawTexture.width - 1);
-            PixelPosY = (int)Mathf.Clamp(mouseImagePos.y / pixelHeight, 0f, drawTexture.height - 1);
-
-            GetPixelInfo(PixelPosX, PixelPosY);
-
-            IsDefaultTile = drawTexture.GetPixel(PixelPosX, PixelPosY) == TileTypeColorMap.GetColor(TileType.Default);
-
-            if (Input.GetMouseButtonDown(0))
+            if (mouseImagePos.x >= 0f && mouseImagePos.x < DrawImageRectWidth && mouseImagePos.y >= 0f && mouseImagePos.y < DrawImageRectHeight)
             {
-                bool colorChanged = false;
-                IMove moveToAdd = null;
-                if (CurrentTool == Tool.DisplacerTake)
+                PixelPosX = (int)Mathf.Clamp(mouseImagePos.x / pixelWidth, 0f, drawTexture.width - 1);
+                PixelPosY = (int)Mathf.Clamp(mouseImagePos.y / pixelHeight, 0f, drawTexture.height - 1);
+
+                GetPixelInfo(PixelPosX, PixelPosY);
+
+                IsDefaultTile = drawTexture.GetPixel(PixelPosX, PixelPosY) == TileTypeColorMap.GetColor(TileType.Default);
+
+                if (Input.GetMouseButtonDown(0))
                 {
-                    if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default))
+                    bool colorChanged = false;
+                    IMove moveToAdd = null;
+                    if (CurrentTool == Tool.DisplacerTake)
                     {
-                        displacerTake = new DisplacerTakeMove(ref drawTexture, _pixelPos, out displacerMoveData);
-                        CurrentTool = Tool.DisplacerPut;
+                        if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default))
+                        {
+                            displacerTake = new DisplacerTakeMove(ref drawTexture, _pixelPos, out displacerMoveData);
+                            CurrentTool = Tool.DisplacerPut;
+                            colorChanged = true;
+                        }
+                    }
+                    else if (CurrentTool == Tool.DisplacerPut)
+                    {
+                        displacerTake = null;
+                        moveToAdd = new DisplacerPutMove(ref drawTexture, displacerMoveData, _pixelPos);
+                        CurrentTool = Tool.DisplacerTake;
                         colorChanged = true;
                     }
-                }
-                else if (CurrentTool == Tool.DisplacerPut)
-                {
-                    displacerTake = null;
-                    moveToAdd = new DisplacerPutMove(ref drawTexture, displacerMoveData, _pixelPos);
-                    CurrentTool = Tool.DisplacerTake;
-                    colorChanged = true;
-                }
-                else if (CurrentTool == Tool.Pipette)
-                {
-                    _ = new PipetteMove(ref drawTexture, _pixelPos, out TileType pipetteType, out int pipettePower, out int pipetteRotation);
-                    if (pipetteType != TileType.Default)
+                    else if (CurrentTool == Tool.Pipette)
                     {
-                        brushTypeDropdown.SetOption((uint)(int)(pipetteType - 1));
-                        powerInput.SetValue(pipettePower);
-                        rotationDropdown.SetOption((uint)pipetteRotation);
+                        _ = new PipetteMove(ref drawTexture, _pixelPos, out TileType pipetteType, out int pipettePower, out int pipetteRotation);
+                        if (pipetteType != TileType.Default)
+                        {
+                            brushTypeDropdown.SetOption((uint)(int)(pipetteType - 1));
+                            powerInput.SetValue(pipettePower);
+                            rotationDropdown.SetOption((uint)pipetteRotation);
+                        }
+                    }
+
+                    AddMoveToHistory(moveToAdd);
+
+                    if (colorChanged)
+                    {
+                        UpdateRotationIndicatorPixel(PixelPosX, PixelPosY);
+                        rotationIndicatorTexture.Apply();
+                        UpdateDrawPointer();
                     }
                 }
-
-                AddMoveToHistory(moveToAdd);
-
-                if (colorChanged)
+                else if (leftMouseBtnHold || rightMouseBtnHold)
                 {
-                    UpdateRotationIndicatorPixel(PixelPosX, PixelPosY);
-                    rotationIndicatorTexture.Apply();
+                    bool rightEraser = rightMouseBtnHold && CurrentTool == Tool.Brush;
+                    if ((CurrentTool == Tool.Eraser && leftMouseBtnHold) || rightEraser)
+                    {
+                        if (rightEraser)
+                        {
+                            temporaryEraser = true;
+                            brushButton.interactable = true;
+                            eraserButton.interactable = false;
+                            Cursor.SetCursor(eraserCursor.cursorImage, eraserCursor.cursorPosition, CursorMode.Auto);
+                        }
+
+                        if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default) && !erases.Exists(d => d.Pos == _pixelPos))
+                        {
+                            EraseData data = new()
+                            {
+                                Pos = _pixelPos,
+                                RemovedColor = drawTexture.GetPixel(_pixelPos.x, _pixelPos.y),
+                                BackgroundColor = TileTypeColorMap.GetColor(TileType.Default)
+                            };
+
+                            erases.Add(data);
+                            _ = new EraseMove(ref drawTexture, data);
+                        }
+                    }
+                    else if (CurrentTool == Tool.Brush)
+                    {
+                        if (!draws.Exists(d => d.Pos == _pixelPos))
+                        {
+                            DrawData data = new()
+                            {
+                                Pos = _pixelPos,
+                                OldColor = drawTexture.GetPixel(_pixelPos.x, _pixelPos.y),
+                                NewColor = TileEncoder.EncodeColor(tileType, tilePower, tileRotation)
+                            };
+
+                            draws.Add(data);
+                            _ = new DrawMove(ref drawTexture, data);
+                        }
+                    }
+
+                    UpdateRotationIndicatorTexture();
                     UpdateDrawPointer();
                 }
-            }
-            else if (leftMouseBtnHold || rightMouseBtnHold)
-            {
-                bool rightEraser = rightMouseBtnHold && CurrentTool == Tool.Brush;
-                if ((CurrentTool == Tool.Eraser && leftMouseBtnHold) || rightEraser)
+                else if (Input.GetMouseButtonDown(2))
                 {
-                    if (rightEraser)
-                    {
-                        temporaryEraser = true;
-                        brushButton.interactable = true;
-                        eraserButton.interactable = false;
-                        Cursor.SetCursor(eraserCursor.cursorImage, eraserCursor.cursorPosition, CursorMode.Auto);
-                    }
-
-                    if (drawTexture.GetPixel(PixelPosX, PixelPosY) != TileTypeColorMap.GetColor(TileType.Default) && !erases.Exists(d => d.Pos == _pixelPos))
-                    {
-                        EraseData data = new()
-                        {
-                            Pos = _pixelPos,
-                            RemovedColor = drawTexture.GetPixel(_pixelPos.x, _pixelPos.y),
-                            BackgroundColor = TileTypeColorMap.GetColor(TileType.Default)
-                        };
-
-                        erases.Add(data);
-                        _ = new EraseMove(ref drawTexture, data);
-                    }
+                    scrollMoveEnabled = true;
+                    startMousePos = Input.mousePosition;
+                    startImagePos = drawImageRect.transform.localPosition;
                 }
-                else if (CurrentTool == Tool.Brush)
+                else if (Input.mouseScrollDelta.y != 0f)
                 {
-                    if (!draws.Exists(d => d.Pos == _pixelPos))
+                    if (ctrlHold || cmdHold)
                     {
-                        DrawData data = new()
-                        {
-                            Pos = _pixelPos,
-                            OldColor = drawTexture.GetPixel(_pixelPos.x, _pixelPos.y),
-                            NewColor = TileEncoder.EncodeColor(tileType, tilePower, tileRotation)
-                        };
-
-                        draws.Add(data);
-                        _ = new DrawMove(ref drawTexture, data);
+                        IsScaling = true;
+                        Scale();
+                    }
+                    else
+                    {
+                        Move();
                     }
                 }
 
-                UpdateRotationIndicatorTexture();
-                UpdateDrawPointer();
-            }
-            else if (Input.GetMouseButtonDown(2))
-            {
-                scrollMoveEnabled = true;
-                startMousePos = Input.mousePosition;
-                startImagePos = drawImageRect.transform.localPosition;
-            }
-            else if (Input.mouseScrollDelta.y != 0f)
-            {
-                if (ctrlHold || cmdHold)
+                if (scrollMoveEnabled)
                 {
-                    IsScaling = true;
-                    Scale();
-                }
-                else
-                {
-                    Move();
+                    ScrollMoveCursor();
+                    ScrollButtonMove();
                 }
             }
+            else
+            {
+                if (pointerIndicatorTexture)
+                {
+                    ClearDrawPointer();
+                }
 
-            if (scrollMoveEnabled)
-            {
-                ScrollMoveCursor();
-                ScrollButtonMove();
+                if (!IsDefaultTile)
+                {
+                    IsDefaultTile = true;
+                }
+
+                if (Input.GetMouseButtonDown(2))
+                {
+                    scrollMoveEnabled = true;
+                    startMousePos = Input.mousePosition;
+                    startImagePos = drawImageRect.transform.localPosition;
+                }
+                else if (Input.mouseScrollDelta.y != 0f)
+                {
+                    if (ctrlHold || cmdHold)
+                    {
+                        IsScaling = true;
+                        Scale();
+                    }
+                    else
+                    {
+                        Move();
+                    }
+                }
+
+                if (scrollMoveEnabled)
+                {
+                    ScrollMoveCursor();
+                    ScrollButtonMove();
+                }
             }
         }
         else
@@ -385,6 +428,8 @@ public class MainScript : MonoBehaviour
                         moveToAdd = new MultipleEraseMove(ref drawTexture, erases);
                     }
 
+                    ChangeColoredPixelsNumber(-erases.Count);
+
                     erases.Clear();
                 }
             }
@@ -400,6 +445,8 @@ public class MainScript : MonoBehaviour
                     {
                         moveToAdd = new MultipleDrawMove(ref drawTexture, draws);
                     }
+
+                    ChangeColoredPixelsNumber(draws.Count);
 
                     draws.Clear();
                 }
@@ -430,13 +477,8 @@ public class MainScript : MonoBehaviour
     }
 
     // Default Options
-    private void ResetSettings()
+    public void ResetView()
     {
-        cleared = false;
-
-        lastPointerPos.x = 0;
-        lastPointerPos.y = 0;
-
         drawImageRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, drawTexture.width);
         drawImageRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, drawTexture.height);
 
@@ -453,6 +495,17 @@ public class MainScript : MonoBehaviour
         scrollMoveEnabled = false;
 
         scalePivotPos = Vector2.one;
+    }
+
+    private void ResetSettings()
+    {
+        cleared = false;
+
+        lastPointerPos.x = 0;
+        lastPointerPos.y = 0;
+
+        ResetView();
+        coloredPixels = 0;
 
         ChangeToBrush(false);
     }
@@ -599,8 +652,10 @@ public class MainScript : MonoBehaviour
     [Header("Move History")]
     [SerializeField] private Button undoButton;
     [SerializeField] private Button redoButton;
+    [SerializeField] private Button resetButton;
     private List<IMove> movesHistory = new();
     private int actualMoveId = -1;
+    private int coloredPixels = 0;
 
     private void AddMoveToHistory(IMove moveToAdd)
     {
@@ -616,28 +671,89 @@ public class MainScript : MonoBehaviour
         ++actualMoveId;
     }
 
-    public void Undo()
+    private void UndoFunc()
+    {
+        movesHistory[actualMoveId].Undo();
+        ChangeColoredPixelsNumber(-movesHistory[actualMoveId].ColoredPixels());
+        --actualMoveId;
+
+        UpdateDrawPointer();
+        UpdateRotationIndicatorTexture();
+    }
+
+    public void UndoBtn()
     {
         if (actualMoveId == -1) return;
 
         if (CheckDisplacerTakeUndoRedo(true)) return;
 
-        movesHistory[actualMoveId].Undo();
-        --actualMoveId;
+        UndoFunc();
+    }
 
+    private void RedoFunc()
+    {
+        ++actualMoveId;
+        movesHistory[actualMoveId].Do();
+        ChangeColoredPixelsNumber(movesHistory[actualMoveId].ColoredPixels());
+
+        UpdateDrawPointer();
         UpdateRotationIndicatorTexture();
     }
 
-    public void Redo()
+    public void RedoBtn()
     {
         if (movesHistory.Count == 0 || actualMoveId + 1 == movesHistory.Count) return;
 
         if (CheckDisplacerTakeUndoRedo(false)) return;
 
-        ++actualMoveId;
-        movesHistory[actualMoveId].Do();
+        RedoFunc();
+    }
 
+    private void ResetFunc()
+    {
+        List<EraseData> resetErases = new();
+
+        Color32 defaultColor = TileTypeColorMap.GetColor(TileType.Default);
+
+        for (int x = 0; x < drawTexture.width; ++x)
+        {
+            for (int y = 0; y < drawTexture.height; ++y)
+            {
+                Color PixelColor = drawTexture.GetPixel(x, y);
+                if (PixelColor == defaultColor) continue;
+
+                EraseData data = new()
+                {
+                    Pos = new Vector2Int(x, y),
+                    RemovedColor = PixelColor,
+                    BackgroundColor = defaultColor
+                };
+
+                resetErases.Add(data);
+            }
+        }
+
+        if (resetErases.Count == 0) return;
+
+        IMove resetMove = new MultipleEraseMove(ref drawTexture, resetErases);
+        coloredPixels = 0;
+
+        AddMoveToHistory(resetMove);
+
+        UpdateDrawPointer();
         UpdateRotationIndicatorTexture();
+    }
+
+    public void ResetBtn()
+    {
+        if (CheckDisplacerTakeReset()) return;
+
+        ResetFunc();
+    }
+
+    private void ChangeColoredPixelsNumber(int num)
+    {
+        coloredPixels += num;
     }
 
     private bool CheckDisplacerTakeUndoRedo(bool undo)
@@ -649,7 +765,7 @@ public class MainScript : MonoBehaviour
 
         messageBox.ShowDialog("Displacer",
                 "You are currently in Displacer placement mode.\n" +
-                "If you undo now, your changes will be lost and cannot be redone.\n\n" +
+                "If you " + (undo ? "undo" : "redo") + " now, your changes will be lost and cannot be redone.\n\n" +
                 "Are you sure you want to continue?",
                 "No", "Yes", x =>
                 {
@@ -663,14 +779,48 @@ public class MainScript : MonoBehaviour
 
                                 if (undo)
                                 {
-                                    movesHistory[actualMoveId].Undo();
-                                    --actualMoveId;
+                                    UndoFunc();
                                 }
                                 else
                                 {
-                                    ++actualMoveId;
-                                    movesHistory[actualMoveId].Do();
+                                    RedoFunc();
                                 }
+
+                                break;
+                            }
+                        case DialogResult.Cancel:
+                            {
+                                break;
+                            }
+                    }
+                }
+            );
+
+        return true;
+    }
+
+    private bool CheckDisplacerTakeReset()
+    {
+        if (messageBox == null || displacerTake == null)
+        {
+            return false;
+        }
+
+        messageBox.ShowDialog("Displacer",
+                "You are currently in Displacer placement mode.\n" +
+                "If you reset now, your changes will be lost and cannot be redone.\n\n" +
+                "Are you sure you want to continue?",
+                "No", "Yes", x =>
+                {
+                    switch (x)
+                    {
+                        case DialogResult.Confirm:
+                            {
+                                displacerTake.Undo();
+                                displacerTake = null;
+                                CurrentTool = Tool.DisplacerTake;
+
+                                ResetFunc();
 
                                 break;
                             }
@@ -1044,6 +1194,8 @@ public class MainScript : MonoBehaviour
     [SerializeField] private TextMeshProUGUI PowerText;
     [SerializeField] private TextMeshProUGUI RotationText;
 
+    [SerializeField] private SizeText SizeText;
+
     private void GetPixelInfo(int x, int y)
     {
         Color color = drawTexture.GetPixel(x, y);
@@ -1118,6 +1270,8 @@ public class MainScript : MonoBehaviour
         GenerateGrid(drawTexture.width, drawTexture.height);
 
         ResetSettings();
+
+        SizeText.SetSize(drawTexture.width, drawTexture.height);
     }
 
     // Rotation Indicator Texture
@@ -1453,6 +1607,54 @@ public class MainScript : MonoBehaviour
         pointerIndicatorTexture.Apply();
     }
 
+    private bool HasParentWithTag(Transform t, string tag)
+    {
+        while (t != null)
+        {
+            if (t.CompareTag(tag))
+                return true;
+
+            t = t.parent;
+        }
+
+        return false;
+    }
+
+    private bool IsPointerOverBlockingUI()
+    {
+        PointerEventData pointerData = new(EventSystem.current)
+        {
+            position = Input.mousePosition
+        };
+
+        List<RaycastResult> results = new();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        foreach (var result in results)
+        {
+            var go = result.gameObject;
+
+            // Tag "Blocking"
+            if (HasParentWithTag(go.transform, "Blocking"))
+                return true;
+
+            // Check Button
+            if (go.GetComponent<Button>() != null)
+                return true;
+
+            // Check Text (old UI)
+            if (go.GetComponent<Text>() != null)
+                return true;
+
+            // Check TextMeshPro
+            if (go.GetComponent<TMPro.TMP_Text>() != null)
+                return true;
+        }
+
+        return false;
+    }
+
+    // Image
     public void SaveImage()
     {
         string filePath = StandaloneFileBrowser.SaveFilePanel("Save Level Map Image", GetProjectsFolder(), "LevelMap", new ExtensionFilter[] { new("QOI", new string[] { "qoi" }), new("PNG", new string[] { "png" }) });
@@ -1502,7 +1704,7 @@ public class MainScript : MonoBehaviour
         }
 
         isInteractionBlocked = true;
-        newProjectWindow.OpenWindow();
+        newProjectWindow.OpenWindow(drawTexture.width, drawTexture.height);
     }
 
     private void OnNewProjectCreate(uint width, uint height)
@@ -1694,6 +1896,8 @@ public class MainScript : MonoBehaviour
             {
                 ShowUpdateProjectMessage(Path.GetDirectoryName(filePaths[0]), data.fileName);
             }
+
+            ChangeColoredPixelsNumber(data.tiles.Length);
         }
         else
         {
