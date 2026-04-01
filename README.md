@@ -150,6 +150,7 @@ This project uses the following third-party libraries:
 * [**UnityStandaloneFileBrowser**](https://github.com/gkngkc/UnityStandaloneFileBrowser) – enables native file open and save dialogs across supported platforms.
 * [**UnityNativeDialog**](https://github.com/FingerCaster/UnityNativeDialog) – used for displaying native system message dialogs (alerts, confirmations, errors).
 * [**Unity.QOI**](https://github.com/ltmx/Unity.QOI) – used for exporting maps to the lossless `QOI` image format.
+* [**Font Awesome Free**](https://fontawesome.com/) – used for UI icons across the editor.
 
 ## File Format Documentations
 * [LEP File Format (`.lep`)](./docs/LEPFileFormat.md)
